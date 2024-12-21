@@ -32,7 +32,8 @@
   13. Performance tuning and monitoring
 
 
-Important topics that are related to database reliability and performance include:
+
+# Important topics that are related to database reliability and performance include :
 
 # Indexing:
   1. Types of indexes (B-tree, hash, full-text)
