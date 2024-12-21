@@ -33,7 +33,8 @@
 
 
 
-# Important topics that are related to database reliability and performance include :
+
+# Below topics are related to database reliability and performance include :
 
 # Indexing:
   1. Types of indexes (B-tree, hash, full-text)
