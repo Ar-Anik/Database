@@ -1,0 +1,200 @@
+Q : Key Field in RDBMS
+--> In a Relational Database Management System (RDBMS), several types of key fields are used to uniquely identify, link, and enforce
+relationships between records. Here’s a list of the key fields commonly found in RDBMS :
+
+1. Primary Key
+Definition: A primary key is a column (or a set of columns) in a database table that uniquely identifies each record in that table.
+It ensures that no two rows can have the same primary key value, and the value cannot be null.
+
+-> Characteristics:
+    1. Uniqueness: Each record must have a unique value in the primary key column(s).
+    2. Non-NULL Constraint: Primary keys cannot contain NULL values.
+    3. Immutability: The value of a primary key should rarely change as it represents the unique identity of the record.
+    4. Single Column or Multi-Column: Can consist of one column or multiple columns (if multi-column, it becomes a composite key).
+
+-> Purpose: The primary key is the main mechanism for identifying a record, enabling fast searches and ensuring data consistency.
+
+Consider a Students table:
+-----------------------------------------
+StudentID	Name	Email
+    1	    Alice	alice@email.com
+    2	    Bob	    bob@email.com
+-----------------------------------------
+
+Here, StudentID is the primary key. It uniquely identifies each student. Each StudentID is unique and cannot be NULL.
+
+-> SQL Syntax:
+    `CREATE TABLE Students (
+        studentId INT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100)
+     );`
+
+-> Real-World Analogy: The primary key is like a passport number. Every individual has a unique passport number (uniqueness).
+A person cannot exist in the database without a passport number (non-null constraint).
+
+
+2. Composite Key
+Definition: A composite key is a combination of two or more columns in a table that, together, uniquely identify a record.
+This is used when no single column is sufficient to guarantee uniqueness.
+
+-> Characteristics:
+    1. Combination of Columns: Two or more columns together form the key.
+    2. Dependent Columns: Each column in the composite key contributes to the uniqueness.
+    3. Non-NULL: None of the columns in the composite key can contain NULL values.
+
+-> Purpose: A composite key is essential when the uniqueness of a record depends on the combination of multiple attributes.
+
+Consider an Orders table:
+-----------------------------------
+OrderID	 ProductID	Quantity
+  1	      101	       2
+  1       102	       1
+  2	      101	       3
+-----------------------------------
+
+Neither OrderID nor ProductID alone can uniquely identify a record. The combination of OrderID and ProductID serves as the composite key.
+
+-> SQL Syntax:
+    `CREATE TABLE Orders(
+        orderId INT,
+        productId INT,
+        quantity INT,
+        PRIMARY KEY(orderId, productId)
+     );`
+
+-> Real-World Analogy: The composite key is like identifying a specific seat in a theater. A single seat (record) is uniquely identified by
+the combination of row number and seat number. Neither the row nor the seat number alone is sufficient.
+
+
+3. Foreign Key
+Definition: A foreign key is a column (or set of columns) in one table that establishes a link to the primary key in another table. It
+enforces referential integrity between the two tables.
+
+-> Characteristics:
+    1. References a Primary Key: A foreign key points to a primary key in another table.
+    2. Maintains Relationships: Ensures data in one table corresponds to valid data in the referenced table.
+    3. Restricts Invalid Data: Prevents inserting a value in the foreign key column that does not exist in the referenced table.
+    4. Optional (NULL): A foreign key column can contain NULL values if the relationship allows for it.
+
+-> Purpose: Foreign keys are used to maintain relationships between tables and ensure data integrity across those tables.
+
+Consider the following two tables:
+Customers Table:
+------------------------------------
+CustomerID	Name
+    1	    Alice
+    2	    Bob
+------------------------------------
+
+Orders Table:
+-------------------------------------
+OrderID	 CustomerID	 Amount
+  101	    1	      500
+  102	    2	      300
+  103	    3	      400
+-------------------------------------
+
+In the Orders table, CustomerID is a foreign key referencing CustomerID in the Customers table. It ensures that every
+CustomerID in the Orders table exists in the Customers table.
+
+-> SQL Syntax:
+    `CREATE TABLE Customers (
+        CustomerID INT PRIMARY KEY,
+        Name VARCHAR(100)
+     );
+
+     CREATE TABLE Orders (
+        OrderID INT PRIMARY KEY,
+        CustomerID INT,
+        Amount DECIMAL(10, 2),
+        FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+     );`
+
+-> Real-World Analogy: Imagine a Library System where there is a Member Directory that lists all registered library members with
+their unique IDs. The library also maintains a Book Borrowing Log to track which members borrow which books.
+
+
+4. Candidate Key
+Definition: A set of one or more fields that can uniquely identify a record in a table. A Candidate Key is any field or set of
+fields in a table that can uniquely identify a record. It is called a Candidate Key because it is a "candidate" to become the
+Primary Key.
+
+-> Characteristics:
+    1. A table can have multiple candidate keys.
+    2. Among all candidate keys, one is chosen as the Primary Key.
+
+-> A candidate key can consist of:
+    1. A single field (Simple Candidate Key).
+    2. Multiple fields (Composite Candidate Key).
+
+-> Candidate Key vs. Primary Key:
+1. Primary Key is a Candidate Key:
+    * Among all the Candidate Keys in a table, one is chosen as the Primary Key.
+
+    For example: In a Users table
+    ---------------------------------------
+      ID	Email	            Name
+      1	    alice@example.com	Alice
+      2	    bob@example.com	    Bob
+    ---------------------------------------
+    Here both ID and Email are Candidate Keys because they can uniquely identify records. The database designer may choose ID
+    as the Primary Key, while Email remains a Candidate Key.
+
+2. Candidate Key Can Be a Single Field:
+    * If a single field (e.g., ID) uniquely identifies a record, it is both a Candidate Key and a potential Primary Key.
+    * Until the database designer selects a specific key as the Primary Key, all potential keys are considered Candidate Keys.
+
+3. Difference between Candidate and Primary key:
+    * Candidate Key: A potential key that uniquely identifies records.
+    * Primary Key: A Candidate Key that has been chosen by the database designer to enforce entity integrity.
+
+4. Why Not Call It Primary Key Directly?
+    Q : A table can have multiple Candidate Keys:
+        * The Primary Key is chosen from these Candidate Keys.
+        * Other Candidate Keys are called Alternate Keys.
+
+-> Composite key vs Candidate key:
+    * Not all Candidate Keys are Composite Keys: A Candidate Key can also be a single field (e.g., ID).
+    * A Composite Key is always made up of multiple fields.
+
+
+5. Alternate Key
+Purpose: Candidate keys that are not chosen as the primary key.
+
+-> Characteristics:
+    1. Uniquely identify records but are not used as the primary identifier.
+
+Example: If ID is the primary key in the Users table, Email becomes the alternate key.
+
+
+6. Unique Key
+Purpose: Ensures that all values in a column or a set of columns are unique.
+-> Characteristics:
+    * Can have one NULL value (unlike a primary key which cannot have NULL).
+
+-> Example: In a Users table:
+    Email (Unique Key)
+    -----------------------
+    alice@example.com
+    bob@example.com
+    -----------------------
+
+
+7.  Super Key
+Definition: A set of one or more fields (attributes) that can uniquely identify a record in a table.
+-> Characteristics:
+    * A Super Key may include extra fields that are unnecessary for unique identification.
+    * Every Candidate Key is a Super Key, but not every Super Key is a Candidate Key.
+    * Includes both minimal and non-minimal keys.
+
+Example: Consider a Users table:
+    | ID  | Name     | Email             |
+    |-----|----------|-------------------|
+    | 1   | Alice    | alice@example.com |
+    | 2   | Bob      | bob@example.com   |
+
+Super Keys in this table:
+    1. {ID}: Minimal and uniquely identifies records.
+    2. {ID, Name}: A Super Key (uniquely identifies records but contains redundant field Name).
+    3. {ID, Email}: A Super Key (uniquely identifies records but contains redundant field Email).

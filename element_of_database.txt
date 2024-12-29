@@ -1,0 +1,93 @@
+Q : What are the elements of databases?
+--> The elements of a database refer to the fundamental components that make up a database and ensure its functionality. These elements
+provide structure, organization, and mechanisms for storing and manipulating data.
+
+--> Below are the key elements:
+
+Users table :
+-------------------------------------------
+    ID	Name	Age	  Email
+    1	Alice	25	  alice@example.com
+    2	Bob	    30	  bob@example.com
+-------------------------------------------
+
+1. Tables
+Definition: The primary structure for storing data in relational databases. Data is organized into rows and columns.
+Components:
+    1. Rows (Records): Individual entries in a table.
+    2. Columns (Fields): Attributes or properties of the data (e.g., Name, Age, Email).
+
+2. Fields
+Definition: The smallest unit of data in a table, representing a single piece of information about a record.
+Example: In a table, Name, Age, and Email are fields.
+
+3. Records
+Definition: A row in a table, representing a single, complete unit of information.
+Example: In the Users table, the row 1 | Alice | 25 | alice@example.com is a record.
+
+4. Keys
+Definition: Special fields used to uniquely identify records and establish relationships between tables.
+Types:
+    1. Primary Key: A unique identifier for a record (e.g., ID in the Users table).
+    2. Foreign Key: A field that links one table to another (e.g., OrderID linking Orders to Users).
+
+5. Indexes
+Definition: Structures that improve the speed of data retrieval operations by organizing fields. (www.w3schools.com/mysql/mysql_create_index.asp)
+Example: An index on the Email field in the Users table allows faster searching for users by their email.
+
+6. Relationships
+Definition: Connections between tables in a relational database.
+Types:
+    1. One-to-One: One record in a table is linked to one record in another table.
+    2. One-to-Many: One record in a table is linked to multiple records in another table.
+    3. Many-to-Many: Many records in one table are linked to many records in another table.
+       Example : A Student can enroll in multiple Courses. on the other hand a Course can have multiple Students enrolled.
+Example: A Users table related to an Orders table through a UserID foreign key.
+
+7. Schemas
+Definition: A schema in a database is the structural definition that defines how data is organized, what entities (tables)
+exist, and how they are related to each other. It essentially serves as the "blueprint" for the database.
+    1. Defines the structure of the database (tables, columns, relationships, data types).
+    2. Describes constraints (such as NOT NULL, PRIMARY KEY, FOREIGN KEY and UNIQUE constraints) and how data should be stored.
+    3. Does not contain actual data but rather specifies the types of data that can exist.
+    4. A schema provides a way to organize database objects logically.
+Key Aspects of a Schema : Tables, Columns, Relationships, Constraints, Indexes
+
+8. Queries
+Definition: A query in a database is a request to retrieve, manipulate, or modify data. Queries are used to interact with the
+database by requesting specific information, updating records, or performing calculations.
+Types of Queries:
+    1. SELECT: Used to retrieve data from one or more tables.
+    2. INSERT: Used to add new records to a table.
+    3. UPDATE: Used to modify existing records in a table.
+    4. DELETE: Used to remove records from a table.
+
+9. Data
+Definition: The actual information stored in the database.
+Example: User data like names, email addresses, or transaction details.
+
+10. Constraints
+Definition: Rules that ensure data integrity and validity.
+Types of Constraints:
+    1. NOT NULL: Ensures a field cannot be empty.
+    2. UNIQUE: Ensures all values in a field are unique.
+    3. CHECK: Ensures a field meets specific conditions.
+    4. FOREIGN KEY: Enforces referential integrity between tables.
+
+11. Triggers
+Definition: Automated procedures that execute in response to specific database events (e.g., inserting or updating a record).
+Example: Automatically update an updated_at field when a record is modified.
+
+12. Views
+Definition: Virtual tables created by a query to present specific data from one or more tables.
+Example: A view showing only active users:
+    `CREATE VIEW ActiveUsers AS
+     SELECT * FROM Users WHERE Active = TRUE;`
+
+13. Stored Procedures
+Definition: Predefined SQL statements stored in the database that can be executed as needed.
+Example: A procedure to calculate user statistics:
+    `CREATE PROCEDURE CalculateUserStats()
+     BEGIN
+       -- SQL logic here
+     END;`
