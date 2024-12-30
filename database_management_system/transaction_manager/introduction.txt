@@ -1,0 +1,36 @@
+? : Transaction Manager in DBMS Engine
+--> The Transaction Manager in a database engine plays a critical role in ensuring the integrity, consistency, and reliability of
+data during database operations.
+
+Here's why it is needed:
+
+1. Ensuring ACID Properties : (still i don't know.)
+
+2. Concurrency Control
+The Transaction Manager handles concurrent transactions efficiently by using locking or multi-versioning techniques.
+It prevents problems like:
+    * Deadlocks: Where two or more transactions wait for each other indefinitely.
+    * Data anomalies: Such as lost updates or inconsistent reads.
+
+3. Recovery Management
+In the event of a system crash or power failure, the Transaction Manager ensures that:
+    * Committed transactions remain durable.
+    * Uncommitted transactions are rolled back to maintain consistency.
+It achieves this using write-ahead logging (WAL) and other recovery techniques.
+
+4. Fault Tolerance
+It provides mechanisms to detect and handle failures during transactions, ensuring data integrity is preserved.
+Example: If a network failure interrupts a distributed transaction, the Transaction Manager ensures the transaction completes or is rolled back properly.
+
+5. Simplification for Developers
+By managing transactions internally, the Transaction Manager abstracts the complexity of handling atomicity, consistency, isolation, and durability.
+Developers can focus on application logic without worrying about low-level transaction handling.
+
+Real-World Example : Consider a banking application where a user transfers money between accounts:
+    * Debit Account A by $100.
+    * Credit Account B by $100.
+If a failure occurs after debiting Account A but before crediting Account B, the system could end up in an inconsistent state.
+The Transaction Manager ensures:
+    * Both operations are completed successfully (commit), or
+    * Both operations are undone (rollback) to maintain consistency.
+

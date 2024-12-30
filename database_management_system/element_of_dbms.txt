@@ -1,0 +1,46 @@
+? : Element of DBMS
+--> The elements of a Database Management System (DBMS) are its key components that work together to ensure efficient storage, retrieval,
+and management of data. These elements include:
+
+1. Hardware
+-> The physical devices that support the DBMS, including servers, storage devices, and network infrastructure.
+Example: Servers for hosting the database and storage disks for storing the actual data.
+
+2. Software
+-> The DBMS software that interacts with the database, operating system, and users to manage data.
+Example: MySQL, PostgreSQL, MongoDB, or Oracle Database.
+
+3. Data
+-> The raw facts and information stored in the database. It is the core asset managed by the DBMS. Data can be:
+    * User Data: Actual data stored in the tables.
+    * Metadata: Data about data, such as schema, constraints, and relationships.
+    * Indexes: Structures for faster data retrieval.
+
+4. Users
+-> The individuals or applications interacting with the database. Users are classified into:
+    * Database Administrators (DBAs): Manage and maintain the DBMS, handle backups, security, and optimizations.
+    * Developers: Write queries and applications to interact with the DBMS.
+    * End Users: Execute queries or interact with the database through applications.
+
+5. Database Schema
+-> Defines the logical structure of the database, including tables, relationships, data types, and constraints.
+Example: An e-commerce database might have tables like Products, Users, and Orders with defined columns and data types.
+
+6. Query Processor
+-> Interprets and executes user queries written in a query language like SQL. First parses the query, then checks for syntax
+and permissions, and generates an execution plan.
+Example: The SQL statement `SELECT * FROM Employees` is processed and translated into actions by the query processor.
+
+7. Database Engine
+-> The core component responsible for data storage, retrieval, and manipulation. It includes:
+    * Storage Engine: Manages physical storage of data.
+    * Transaction Manager: Ensures ACID (Atomicity, Consistency, Isolation, Durability) properties for transactions. (in folder)
+
+8. Data Dictionary (Metadata)
+-> A repository of information about the database structure, including schemas, constraints, and permissions. (in folder)
+Example: Stores details about tables, columns, data types, and relationships.
+
+9. Concurrency Control Manager
+-> Ensures consistency and integrity when multiple users access the database simultaneously. (in folder)
+Example: Prevents conflicts in scenarios where two users update the same data concurrently.
+

@@ -1,0 +1,52 @@
+Q : What is Database Management System ?
+--> A Database Management System (DBMS) is software that enables users to create, manage, and interact with databases. It provides an
+interface between the user and the database, allowing for efficient handling of data while abstracting the complexities of underlying
+storage mechanisms.
+
+Key Functions of a DBMS:
+1. Data Definition:
+    * Defines the structure of the database using a Data Definition Language (DDL) like SQL.
+    * For example, creating tables, specifying data types, and setting constraints.
+
+2. Data Manipulation:
+    * Enables data retrieval, insertion, update, and deletion through Data Manipulation Language (DML) queries.
+    * Example: SQL queries like SELECT, INSERT, UPDATE, and DELETE.
+
+3. Data Security and Authorization:
+    * Ensures that only authorized users can access or manipulate the database.
+    * Example: User roles and permissions.
+
+4. Data Integrity:
+    * Enforces rules to maintain the accuracy and consistency of data.
+    * Example: Primary keys, foreign keys, and unique constraints.
+
+5. Data Backup and Recovery:
+    * Protects data against loss and facilitates recovery in case of system failure.
+
+6. Concurrency Control:
+    * Manages simultaneous access to ensure data consistency when multiple users access the database concurrently.
+
+7. Data Independence:
+    * Separates application logic from physical data storage, allowing changes to the database structure without affecting applications.
+
+
+Types of DBMS:
+1. Relational DBMS (RDBMS):
+    * Organizes data into tables (relations) with rows and columns.
+    * Examples: MySQL, PostgreSQL, Oracle Database, Microsoft SQL Server.
+
+2. NoSQL DBMS:
+    * Stores unstructured or semi-structured data and offers flexibility in data models.
+    * Examples: MongoDB, Cassandra, Redis.
+
+3. Hierarchical DBMS:
+    * Uses a tree-like structure for data representation.
+    * Example: IBM Information Management System (IMS).
+
+4. Network DBMS:
+    * Represents data in a graph with nodes (entities) and edges (relationships).
+    * Example: Integrated Data Store (IDS).
+
+5. Object-Oriented DBMS (OODBMS):
+    * Stores data as objects, similar to object-oriented programming.
+    * Example: db4o, ObjectDB.

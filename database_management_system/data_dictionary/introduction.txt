@@ -1,0 +1,50 @@
+? : Data Dictionary in DBMS
+--> In a Database Management System (DBMS), a Data Dictionary (also known as Metadata) is a repository or catalog of information that describes
+the structure, organization, and properties of data stored in the database. Essentially, it is a database about the database, containing
+information about the data (referred to as metadata).
+
+
+# Key Features of a Data Dictionary :
+1. Metadata Storage:
+    * Contains descriptions of tables, columns, data types, constraints, indexes, and relationships.
+    * Stores information about users, privileges, and database structure.
+
+2. Automated Maintenance:
+    * The DBMS automatically updates the data dictionary when changes are made to the database schema.
+
+3. Accessible to Users:
+    * DBMS provides tools or queries to access the data dictionary, allowing users to understand the database structure.
+
+4. Read-Only Nature:
+    * Users can read the metadata but cannot modify it directly. Updates are handled by the DBMS.
+
+
+# Types of Metadata in a Data Dictionary
+1. Structural Metadata: Describes the schema and structure of the database (e.g., table names, column names, data types).
+2. Administrative Metadata: Provides details about user roles, privileges, and access control.
+3. Statistical Metadata: Includes information such as table size, number of rows, and storage requirements.
+
+
+# Components of a Data Dictionary
+1. Table Information: Table names, column names, data types, primary keys, foreign keys, and constraints.
+2. Column Details: Data type, size, default values, and nullable status.
+3. Index Information: Index names, columns involved, and uniqueness.
+4. Relationships: Relationships between tables, including foreign key constraints.
+5. Access Control: Information about users, roles, and permissions.
+
+# Example: Metadata in a DBMS
+Consider a simple table Customers in a database:
+-------------------------------------------------------------
+    Column Name	|Data Type	|Size	|Nullable	|Key Type
+    CustomerID	|  INT	    | 4	    | No	    |Primary Key
+    Name	    | VARCHAR	| 100	| No        |
+    Email	    | VARCHAR	| 100	| Yes       |
+    Phone	    | VARCHAR	| 15	| Yes       |
+-------------------------------------------------------------
+
+The Data Dictionary would contain:
+* Table Name: Customers
+* Columns: CustomerID, Name, Email, Phone
+* Data Types: INT, VARCHAR
+* Keys: Primary key (CustomerID)
+* Constraints: NOT NULL, UNIQUE
