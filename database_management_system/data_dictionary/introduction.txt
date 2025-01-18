@@ -48,3 +48,5 @@ The Data Dictionary would contain:
 * Data Types: INT, VARCHAR
 * Keys: Primary key (CustomerID)
 * Constraints: NOT NULL, UNIQUE
+
+--> Command : mysql> describe customers;
