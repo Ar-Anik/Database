@@ -1,0 +1,57 @@
+? : Locking Protocols
+--> Locking protocols in a DBMS define rules and procedures for acquiring and releasing locks to ensure consistent and conflict-free transaction execution.
+These protocols are important for maintaining the isolation and serializability properties of transactions while managing concurrency.
+
+# Here are some widely used locking protocols and their mechanisms:
+
+1. Two-Phase Locking Protocol (2PL)
+-> The Two-Phase Locking Protocol (2PL) is one of the most common protocols. It ensures serializability by dividing a transaction's lock operations into two
+distinct phases.
+
+-> Phases in 2PL:
+    1. Growing Phase:
+        * A transaction can acquire locks (Shared or Exclusive) but cannot release any locks.
+        * Locks are only acquired during this phase.
+
+    2. Shrinking Phase:
+        * A transaction can release locks but cannot acquire any new locks.
+        * Locks are only released during this phase.
+
+->  Example:
+Transaction T1:
+    1. Acquire a Shared Lock (S-Lock) on A → Read A.
+    2. Upgrade to an Exclusive Lock (X-Lock) on A → Modify A. (Upgrade means transaction can upgrade without releasing lock.)
+    3. Release the locks on A → Complete.
+
+-> This protocol ensures no transaction can access partially modified data by enforcing a clear growing and shrinking phase.
+
+-> Advantages:
+    * Guarantees serializability.
+    * Prevents dirty reads, non-repeatable reads, and phantom reads.
+-> Disadvantages:
+    * Can lead to deadlocks if transactions are waiting for each other's locks.
+
+
+2. Strict Two-Phase Locking Protocol (Strict 2PL)
+-> A variation of 2PL, Strict 2PL, adds a restriction: A transaction must hold all locks until it commits or aborts.
+
+# How It Works:
+    * Locks are not released during the transaction's lifetime.
+    * Once the transaction completes (commit or rollback), all locks are released at once.
+
+-> Example:
+    * T1 acquires an X-Lock on A, modifies A, and holds the lock until the transaction commits.
+
+-> Advantages:
+    * Prevents cascading rollbacks (because no changes are visible to other transactions until commit).
+    * Guarantees serializability.
+-> Disadvantages:
+    * Reduces concurrency due to prolonged lock holding.
+
+
+3. Rigorous Two-Phase Locking Protocol
+-> A more restrictive version of Strict 2PL: Transactions hold all locks (both read and write) until they commit or abort.
+
+-> Difference from Strict 2PL: Rigorous 2PL does not differentiate between S-Locks and X-Locks. Both are held until the transaction completes.
+
+

@@ -1,0 +1,7 @@
+? : Concurrency Control Manager
+--> Concurrency Control Managers (CCMs) are key components in database management systems (DBMS) designed to ensure consistency and prevent conflicts when
+multiple users or transactions attempt to access or modify the same data concurrently.
+
+Below is an explanation of how they achieve this:
+
+1. Locks. (in folder)

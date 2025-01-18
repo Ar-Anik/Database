@@ -1,0 +1,50 @@
+? : Locks in Concurrency Control Manager.
+--> A lock is a mechanism that restricts access to a data item (like a record, table, or object) to ensure that multiple transactions don't conflict when they
+read or write to the same data. Locks are essential for maintaining database consistency and ensuring isolation.
+
+# Types of Locks
+1. Shared Lock (S-Lock)
+    * Allows multiple transactions to read a data item concurrently.
+    * Prevents write operations while the shared lock is active.
+    * Example: If Transaction T1 has a shared lock on data X, Transaction T2 can also read X, but neither can write to X.
+
+2. Exclusive Lock (X-Lock)
+    * Allows a single transaction to both read and write a data item.
+    * Prevents any other transaction from accessing the data item (either for reading or writing) while the lock is held.
+    * Example: If Transaction T1 holds an exclusive lock on X, no other transaction can access X until the lock is released.
+
+3. Intention Locks
+    * Intention locks are used to support hierarchical locking (e.g., locking a table or a row).
+    -> Types of Intention Locks:
+        1. Intention Shared (IS): Indicates a transaction intends to set shared locks on specific lower-level resources (e.g., rows in a table).
+        2. Intention Exclusive (IX): Indicates a transaction intends to set exclusive locks on specific lower-level resources.
+        3. Shared Intention Exclusive (SIX): A shared lock at a higher level and intention exclusive lock on lower levels.
+    * Use Case: Prevents conflicts when different levels of data hierarchy are locked.
+
+4. Read-Write Locks (In File)
+
+# Lock Granularity
+-> Locks can be applied at different levels, called granularity:
+
+1. Database-Level Lock:
+    * Locks the entire database.
+    * Simple but reduces concurrency significantly.
+
+2. Table-Level Lock:
+    * Locks an entire table.
+    * Suitable for batch operations but still reduces concurrency.
+
+3. Page-Level Lock:
+    * Locks a specific page (a block of rows) in the database.
+    * Balances concurrency and overhead.
+
+4. Row-Level Lock:
+    * Locks individual rows in a table.
+    * Maximizes concurrency but increases locking overhead.
+
+5. Field-Level Lock:
+    * Locks specific fields within a row.
+    * Rarely used due to high complexity.
+
+
+# Locking Protocols (In File)

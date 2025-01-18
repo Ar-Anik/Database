@@ -23,7 +23,7 @@ Example: MySQL, PostgreSQL, MongoDB, or Oracle Database.
     * End Users: Execute queries or interact with the database through applications.
 
 5. Database Schema
--> Defines the logical structure of the database, including tables, relationships, data types, and constraints.
+-> A database schema defines the structure of a database, including its tables, columns, data types, relationships, and constraints.
 Example: An e-commerce database might have tables like Products, Users, and Orders with defined columns and data types.
 
 6. Query Processor

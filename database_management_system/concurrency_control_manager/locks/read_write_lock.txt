@@ -1,0 +1,70 @@
+? : Read-Write Lock
+--> Read-Write locks are used to manage concurrent access to a shared resource (e.g., a database record or a file) in scenarios where multiple transactions
+or threads need to read or write the resource. These locks aim to balance data consistency with performance, allowing multiple reads while preventing
+conflicts between reads and writes.
+
+# Types of Locks in Read-Write Locking
+1. Read Lock (Shared Lock):
+    * Allows multiple readers to access the resource simultaneously.
+    * Prevents any writers from accessing the resource while reading is in progress.
+    * Useful for read-only operations, where no data modification occurs.
+
+2. Write Lock (Exclusive Lock):
+    1. Allows only one writer to access the resource.
+    2. Blocks all other readers and writers until the write operation is complete.
+    3. Ensures data consistency by preventing simultaneous reads or writes.
+
+# How They Work:
+1. Acquiring Locks:
+    * A transaction requests either a read lock or a write lock on the resource.
+    * The lock manager checks the current lock status:
+        1. If the resource is not locked, the requested lock is granted.
+        2. If the resource is locked, the lock manager consults the compatibility matrix to decide:
+            * Read locks are compatible with other read locks (multiple readers can coexist).
+            * Write locks are not compatible with any other locks.
+
+2. Holding Locks:
+    * Once granted, the lock ensures that the transaction can perform its operation (read or write) without interference.
+    * Other transactions may have to wait if their requested lock is not compatible with the current lock.
+
+3. Releasing Locks:
+    * After the transaction finishes its operation, it releases the lock.
+    * The lock manager then grants pending lock requests in a queue based on the compatibility rules.
+
+
+# Scenarios and Examples
+Case 1: Multiple Readers.
+-> Initial State: Resource is unlocked.
+1. Transaction T1 requests a read lock: Granted because no other locks exist.
+2. Transaction T2 requests a read lock: Granted because a read lock is compatible with another read lock.
+-> Outcome: Both T1 and T2 can read the resource simultaneously.
+
+Case 2: Writer Blocks Readers
+-> Initial State: Resource is unlocked.
+1. Transaction T1 requests a write lock: Granted because no other locks exist.
+2. Transaction T2 requests a read lock while T1 is writing: Denied because a read lock is not compatible with a write lock.
+-> Outcome: T2 must wait until T1 finishes writing and releases the lock.
+
+Case 3: Multiple Readers Followed by a Writer
+-> Initial State: Resource is unlocked.
+1. Transaction T1 requests a read lock: Granted because no other locks exist.
+2. Transaction T2 requests a read lock: Granted because a read lock is compatible with another read lock.
+3. Transaction T3 requests a write lock: Denied because a write lock is not compatible with read locks.
+-> Outcome: T3 must wait until both T1 and T2 release their read locks.
+
+
+# Advantages of Read-Write Locks
+1. Efficiency: Multiple readers can access the resource simultaneously, maximizing performance in read-heavy workloads.
+2. Data Consistency: Writers have exclusive access, ensuring that no readers or writers see inconsistent data.
+3. Flexibility: Combines the advantages of both shared and exclusive locks.
+
+
+# Use Case: Real-Life Example
+1. Scenario:
+-> Imagine a banking system where:
+    * Customers frequently check their account balance (read operation).
+    * Occasionally, they deposit or withdraw money (write operation).
+-> Implementation:
+    * Use read locks for balance checks, allowing multiple customers to check their balance simultaneously.
+    * Use a write lock for deposits or withdrawals, ensuring only one transaction modifies the balance at a time.
+

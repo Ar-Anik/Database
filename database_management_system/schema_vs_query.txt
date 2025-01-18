@@ -1,0 +1,51 @@
+1. Schema
+-> Definition: A schema defines the structure of the database. It includes the organization of tables, columns, data types, relationships,
+constraints, indexes, and other structural elements.
+
+-> Purpose:
+   A schema:
+    * Provides a blueprint for how data is organized.
+    * Ensures consistency and integrity through constraints.
+    * Defines relationships between tables (e.g., foreign keys).
+
+-> Example :
+CREATE TABLE Users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-> Static Nature: A schema is static and remains consistent unless modified by a database administrator or developer.
+-> Scope: A schema deals with the structure of the database.
+
+
+2. Query
+-> Definition: A query is a request to retrieve, manipulate, or modify data stored in a database. It uses a query language, like
+SQL (Structured Query Language), to interact with the data.
+
+-> Purpose:
+   Queries are used to:
+    * Retrieve data (e.g., SELECT statement).
+    * Insert new data (e.g., INSERT statement).
+    * Update existing data (e.g., UPDATE statement).
+    * Delete data (e.g., DELETE statement).
+
+-> Example:
+    SELECT first_name, last_name FROM Users WHERE user_id = 1;
+
+-> Dynamic Nature: Queries are executed dynamically to perform operations on the data.
+-> Scope: A query deals with the contents of the database.
+
+# Key Differences
+------------------------------------------------------------------------------------------------------------------
+    Aspect	                    Query	                                       Schema
+----------------|--------------------------------------------|----------------------------------------------------
+Definition	    | A request to perform operations on data.	 | A blueprint defining the database's structure.
+Purpose	        | Interacts with the data (read, write,      | Describes how data is organized and stored.
+                | update, delete).                           |
+Example	        | SELECT * FROM Users;	                     | CREATE TABLE Users (...);
+Dynamic/Static	| Dynamic (executed at runtime).	         | Static (defined during design/setup).
+Focus	        | Operates on the data.	                     | Defines the structure of the database.
+------------------------------------------------------------------------------------------------------------------
