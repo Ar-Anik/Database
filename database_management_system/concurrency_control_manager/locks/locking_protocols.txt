@@ -54,4 +54,19 @@ Transaction T1:
 
 -> Difference from Strict 2PL: Rigorous 2PL does not differentiate between S-Locks and X-Locks. Both are held until the transaction completes.
 
+# Strict 2PL VS Rigorous 2PL (in folder)
 
+4. Conservative Two-Phase Locking Protocol
+-> This variation avoids deadlocks by acquiring all required locks at the beginning of the transaction.
+
+-> How It Works:
+    * A transaction first determines all the data items it needs to lock.
+    * Attempts to acquire all the required locks.
+    * If any lock cannot be acquired, the transaction releases all the locks it has obtained and retries later.
+
+-> Advantages:
+    * Eliminates deadlocks (because no partial locks are held while waiting for others).
+
+-> Disadvantages:
+    -> May lead to reduced concurrency due to lock pre-acquisition.
+    -> Requires the transaction to know all required resources upfront.

@@ -1,0 +1,41 @@
+1. Transaction Commit
+--> Definition: A commit is the final step in a transaction where all changes made within the transaction are permanently saved to the database.
+
+--> Effect: Once a transaction is committed, the changes cannot be undone (unless explicitly handled with additional logic such as compensating
+transactions).
+
+--> Example (SQL):
+BEGIN TRANSACTION;
+    UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+    UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+
+Here, the balance transfer between two accounts becomes permanent only after COMMIT.
+
+
+2. Transaction Release
+--> Definition: The term transaction release is not a standard database term but can refer to a transaction being ended or closed without necessarily
+committing the changes.
+
+--> Scenarios:
+    1. It could mean the transaction is rolled back (undoing changes).
+    2. It could indicate a connection closure or resource release after a transaction is completed.
+    3. In some database systems, it might mean the transaction lock or session is released after committing.
+
+
+--> Key Differences
+----------------------------------------------------------------------------------------------------
+Feature	            | Transaction Commit	            | Transaction Release
+----------------------------------------------------------------------------------------------------
+Action	            | Saves changes permanently	        | Ends transaction (can include rollback)
+----------------------------------------------------------------------------------------------------
+Data Persistence	| Yes, changes are stored	        | Depends (may rollback)
+----------------------------------------------------------------------------------------------------
+Undo Possible?	    | No, unless another compensating   | Yes, if rolled back
+                    | transaction is used	            |
+----------------------------------------------------------------------------------------------------
+Common in?	        | Databases, ACID transactions	    | Session management, connection pooling
+----------------------------------------------------------------------------------------------------
+
+--> Conclusion : Commit ensures data is saved permanently, while release could mean ending a transaction with or without committing.
+

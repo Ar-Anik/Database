@@ -1,0 +1,54 @@
+---> Both Strict Two-Phase Locking (Strict 2PL) and Rigorous Two-Phase Locking (Rigorous 2PL) are variations of the Two-Phase Locking (2PL) protocol
+used in database concurrency control to ensure serializability and prevent issues like dirty reads, lost updates, and uncommitted dependencies.
+However, they differ in how and when locks are released.
+
+-> Strict Two-Phase Locking (Strict 2PL)
+1. Lock Acquisition Phase: A transaction must acquire a lock (either shared or exclusive) on a data item before reading or writing it.
+
+2. Lock Holding Rule:
+    * Exclusive (write) locks are held until the transaction commits or aborts.
+    * Shared (read) locks can be released immediately after use.
+
+3. Lock Release Phase: All exclusive locks are released at the end of the transaction (commit or abort).
+
+4. Effect:
+    * Prevents dirty reads (reading uncommitted data).
+    * Does not prevent cascading aborts because shared locks can be released before the transaction commits.
+
+# Example:
+    * Transaction T1 writes to a data item X and keeps the lock until it commits or aborts, preventing other transactions from reading an uncommitted value.
+    * However, if T1 only reads X, it can release the shared lock immediately, allowing another transaction to modify X before T1 commits.
+
+
+-> Rigorous Two-Phase Locking (Rigorous 2PL)
+1. Lock Acquisition Phase: Similar to Strict 2PL, a transaction must acquire a lock before accessing a data item.
+
+2. Lock Holding Rule: Both exclusive (write) and shared (read) locks are held until the transaction commits or aborts.
+
+3. Lock Release Phase: All locks (shared and exclusive) are released only at the end of the transaction (commit or abort).
+
+4. Effect:
+    * Prevents dirty reads and cascading aborts since no other transaction can access a locked data item until the locking transaction commits.
+    * Ensures strict serializability, making it easier to implement recoverability.
+
+# Example:
+    * If T1 reads or writes X, it holds the lock until it commits or aborts.
+    * This ensures that no other transaction can modify or read X before T1 finishes execution.
+
+-> Key Differences Between Strict 2PL and Rigorous 2PL
+--------------------------------------------------------------------------------------------------------
+Feature	                                Strict 2PL	                        Rigorous 2PL
+--------------------------------------------------------------------------------------------------------
+Shared (Read) Lock Release	       | Can be released before commit	  |  Held until commit/abort
+--------------------------------------------------------------------------------------------------------
+Exclusive (Write) Lock Release	   | Held until commit/abort	      |  Held until commit/abort
+--------------------------------------------------------------------------------------------------------
+Prevents Dirty Reads?	           |      ✅ Yes	                      |      ✅ Yes
+--------------------------------------------------------------------------------------------------------
+Prevents Cascading Aborts?	       |      ❌ No	                      |      ✅ Yes
+--------------------------------------------------------------------------------------------------------
+Ensures Strict Serializability?	   |      ❌ No	                      |      ✅ Yes
+--------------------------------------------------------------------------------------------------------
+Complexity	                       | Less strict, more concurrency	  |  More strict, less concurrency
+--------------------------------------------------------------------------------------------------------
+
