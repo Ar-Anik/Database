@@ -70,3 +70,4 @@ Transaction T1:
 -> Disadvantages:
     -> May lead to reduced concurrency due to lock pre-acquisition.
     -> Requires the transaction to know all required resources upfront.
+

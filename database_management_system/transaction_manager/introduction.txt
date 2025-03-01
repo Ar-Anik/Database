@@ -4,7 +4,7 @@ data during database operations.
 
 Here's why it is needed:
 
-1. Ensuring ACID Properties : (still i don't know.)
+1. Ensuring ACID Properties (In DBMS Folder)
 
 2. Concurrency Control
 The Transaction Manager handles concurrent transactions efficiently by using locking or multi-versioning techniques.

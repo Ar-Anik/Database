@@ -1,0 +1,177 @@
+Q : What is a Transaction in DBMS ?
+--> A transaction in a Database Management System (DBMS) is a sequence of operations (such as reading, writing, updating, or deleting data)
+    performed as a single unit of work. Transactions ensure data consistency, integrity, and reliability, even in cases of system failures
+    or concurrent execution.
+
+Q: Key Properties of a Transaction (ACID Properties)
+---> A transaction follows the ACID properties:
+
+1. Atomicity (All or Nothing)
+A transaction must be fully completed or fully rolled back if any part of it fails. (The entire transection take places at once or doesn't happen at all.)
+Example: If a bank transfer fails halfway, the system undoes any partial changes.
+
+2. Consistency (Maintains Database Rules)
+A transaction must transform the database from one valid state to another. (The database must be consistent before and after the transaction.)
+Example: If $500 is transferred from Account A to Account B, the total amount remains the same.
+
+3. Isolation (Concurrent Transactions Do Not Interfere)
+Multiple transactions running simultaneously should not affect each other. (Multiple transactions occur independently without interference.)
+Example: Two customers booking the last available train ticket at the same time—only one should succeed.
+
+4. Durability (Changes are Permanent)
+Once a transaction is committed, its changes must persist even after a system crash. (Durability guarantes that once the transaction completes and changes are written to the databases.)
+Example: If a purchase is confirmed, the order details should not disappear after a power outage.
+
+
+# Bank Transfer Example
+--> Imagine a bank transfer of $500 from Account A to Account B. The transaction consists of the following steps:
+    1. Start the transaction.
+    2. Read Account A’s balance.
+    3. Subtract $500 from Account A.
+    4. Read Account B’s balance.
+    5. Add $500 to Account B.
+    6. Commit the transaction (save the changes).
+If a failure happens in steps 3-5, the database rolls back to the original state to maintain consistency.
+
+
+Q : Two Customers Booking the Last Train Ticket at the Same Time (Transaction Execution) Which one is success ?
+--> Problem Scenario:
+    1. There is only one seat available on a train.
+    2. Two customers, T1 (Alice) and T2 (Bob), try to book it at the same time.
+    3. The database must ensure that only one transaction succeeds, and the other fails.
+
+# How the Transaction Will Execute with Locks ?
+--> To ensure correctness and consistency, the DBMS follows ACID properties and uses locks to control concurrency. Step-by-Step Execution :
+
+1. Transaction T1 (Alice) Starts
+    * Acquires a Shared Lock (S-Lock) on the seat record.
+    * Reads the number of available seats (Seats = 1).
+
+2. Transaction T2 (Bob) Starts (at the same time)
+    * Acquires a Shared Lock (S-Lock) on the seat record.
+    * Reads the number of available seats (Seats = 1).
+
+Both transactions believe 1 seat is available.
+
+3. Transaction T1 Requests an Exclusive Lock (X-Lock) to Book the Seat
+    * The DBMS upgrades the S-Lock to an X-Lock (write access).
+    * T1 updates Seats = 0 (seat booked).
+    * T1 commits the transaction and releases the lock.
+
+4. Transaction T2 Requests an Exclusive Lock (X-Lock) to Book the Seat
+    * The DBMS denies the request because T1 has already booked the last seat.
+    * T2 detects that Seats = 0 after re-reading the value.
+    * T2 aborts or shows an error message: "Seat not available."
+
+# Final Outcome
+    * Alice (T1) successfully books the ticket.
+    * Bob (T2) gets an error message.
+    * The system prevents overbooking and ensures data consistency.
+
+Q: How Different Concurrency Control Mechanisms in DBMS Ensures Correctness
+1. Lock-Based Approach (2PL - Two-Phase Locking)
+    * Transactions must acquire a lock before reading/writing.
+    * T1 gets an Exclusive Lock first, blocking T2.
+    * This prevents both from booking the same seat.
+
+2. Optimistic Concurrency Control (OCC)
+    * Both transactions proceed without locking.
+    * At commit time, the DBMS checks for conflicts.
+    * If another transaction has modified the data, the second transaction rolls back.
+
+3. Timestamp-Based Ordering
+    * Each transaction gets a timestamp.
+    * The DBMS processes them in order.
+    * The first transaction to update the seat wins.
+
+
+Q : How Locking Works When Requests Happen Simultaneously ?
+Concurrency in DBMS is Not Truly Simultaneous
+
+1. Even if T1 and T2 appear to request the lock "at the same time," the DBMS handles requests sequentially.
+-> The lock manager processes one request before the other based on factors like:
+    * Arrival Order: The first request received by the DBMS is processed first.
+    * Transaction Priority: Some databases assign priority based on timestamps.
+    * Scheduling Algorithm: The DBMS may use First-Come-First-Serve (FCFS), Timestamp Ordering, or a Wait-Die scheme.
+
+2. Lock Request Handling
+    * T1 and T2 both start with a Shared Lock (S-Lock) because they are reading available seats.
+    * When they both request an Exclusive Lock (X-Lock) to book the seat:
+    * The Lock Manager grants the X-Lock to the first transaction it processes.
+    * The second transaction is forced to wait.
+
+3. Lock Granting Process
+    * Assume T1's request is processed slightly before T2 due to scheduling.
+    * T1 gets the X-Lock first.
+    * T2’s request for an X-Lock is denied because T1 is already modifying the record.
+    * T2 is forced to wait until T1 releases the lock.
+    * Once T1 commits and releases the lock, T2 tries again but finds that the seat is no longer available.
+
+
+Q: Why T1 Wins Over T2?
+1. DBMS Cannot Process Two Requests Exactly Simultaneously
+    * Even though T1 and T2 request an X-Lock "at the same time," the DBMS must process one first.
+    * This is determined by internal scheduling mechanisms.
+
+2. Locking is First-Come-First-Serve (FCFS) in Most Cases
+    * If the DBMS received T1’s X-Lock request first, it grants T1 the lock.
+    * T2 is forced to wait.
+
+3. Deadlock Prevention
+    * If both T1 and T2 kept holding locks while waiting, a deadlock could occur.
+    * To avoid this, DBMS enforces one winner and makes the other wait or abort.
+
+Q: What If T2 Had Won Instead of T1?
+    * If the DBMS had processed T2 first, then T2 would get the X-Lock.
+    * T1 would have to wait and then abort when it finds the seat is booked.
+
+Q: How Does the DBMS Deny the Exclusive Lock (X-Lock) Request?
+--> The DBMS does NOT need to know the full process of the transaction beforehand. Instead, it follows a strict locking protocol that
+    checks whether a lock request is compatible with the existing locks.
+
+# Step-by-Step Locking and Denial Process
+Let's go through the exact process of how the DBMS denies the request without knowing the full transaction in advance.
+-> Step 1: Both Transactions Start
+    * T1 and T2 both read the seat availability (Seats = 1).
+    * Both acquire a Shared Lock (S-Lock) on the seat record.
+    * The DBMS allows this because S-Locks are compatible (both can read).
+
+-> Step 2: T1 Requests an Exclusive Lock (X-Lock) to Book the Seat
+    * T1 wants to update the seat count (i.e., set Seats = 0).
+    * DBMS checks the current lock status:
+        -> T1 already has an S-Lock.
+        -> Since T1 wants to write, it requests an X-Lock.
+        -> DBMS upgrades T1’s S-Lock to an X-Lock.
+    * Lock compatibility check:
+        -> Since an X-Lock is exclusive, all other transactions must wait.
+
+-> Step 3: T2 Requests an Exclusive Lock (X-Lock)
+    * T2 also wants to book the seat, so it requests an X-Lock.
+    * DBMS checks current lock status:
+    * T1 is holding an X-Lock on the seat record.
+    * X-Locks are not compatible with any other lock.
+    * DBMS immediately denies the request because another transaction (T1) is already modifying the data.
+    * T2 is forced to wait.
+
+-> Step 4: T1 Completes the Transaction
+    * T1 modifies Seats = 0 (seat booked).
+    * T1 commits the transaction.
+    * T1 releases the X-Lock.
+
+-> Step 5: T2 Rechecks the Seat Availability
+    * Now that T1’s lock is released, T2 is allowed to proceed.
+    * T2 re-reads the data and finds that Seats = 0 (no seat available).
+    * T2 realizes it cannot proceed and aborts.
+
+# Key Takeaways
+1. The DBMS does NOT know the full process of T2 beforehand.
+    * It only checks whether the requested lock is compatible with the current locks.
+    * When T2 requests an X-Lock, the DBMS denies it because T1 already holds an X-Lock.
+
+2. Locks are checked dynamically at the moment of request.
+    * The DBMS does not predict what T2 wants to do.
+    * It only compares the requested lock type with the existing locks.
+
+3. T2 is forced to wait and must retry after T1 releases the lock.
+    * After T1 commits and releases the X-Lock, T2 can retry.
+    * But when T2 rechecks, it sees Seats = 0 and aborts.

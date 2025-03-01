@@ -48,3 +48,6 @@ read or write to the same data. Locks are essential for maintaining database con
 
 
 # Locking Protocols (In File)
+
+# Lock Release Protocols (In File)
+
