@@ -51,3 +51,14 @@ read or write to the same data. Locks are essential for maintaining database con
 
 # Lock Release Protocols (In File)
 
+# Compatibility Matrix (In File)
+
+-> Advantages of Locks
+    1. Prevents dirty reads, non-repeatable reads, and phantom reads.
+    2. Ensures transaction atomicity and isolation.
+    3. Provides fine-grained control over concurrent access.
+
+-> Disadvantages of Locks
+    1. Can lead to deadlocks and increased transaction latency.
+    2. Overhead in managing locks and maintaining the lock table.
+    3. High contention in systems with many concurrent transactions.

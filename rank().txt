@@ -1,0 +1,49 @@
+Q : What is RANK()?
+-> RANK() is a window function in SQL that assigns a ranking number to each row within a group (partition) based on
+   some order.
+
+Q : Basic Syntax of RANK() -
+    RANK() OVER (
+      PARTITION BY column1
+      ORDER BY column2 [ASC|DESC]
+    )
+where,
+PARTITION BY: Breaks the data into groups (e.g., one group per customer).
+ORDER BY: Sorts the rows within each group.
+RANK(): Assigns ranks starting at 1 based on the sort.
+
+# Example - Suppose we have a Sales table :
+-- Sales --
+CREATE TABLE sales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer VARCHAR(100),
+    product VARCHAR(100),
+    quantity INT
+);
+-- --
+
+--  we want Rank Products per Customer so query --
+SELECT customer,
+  product,
+  quantity,
+  RANK() OVER (
+    PARTITION BY customer
+    ORDER BY quantity DESC
+  ) AS rnk
+FROM sales;
+-- --
+
+-- we want customer wise most sales top product --
+SELECT *
+FROM (
+  SELECT customer,
+    product,
+    quantity,
+    RANK() OVER (
+      PARTITION BY customer
+      ORDER BY quantity DESC, product ASC
+    ) AS rnk
+  FROM sales
+) AS ranked
+WHERE rnk = 1;
+-- --

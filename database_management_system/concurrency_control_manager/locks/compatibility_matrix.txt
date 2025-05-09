@@ -1,0 +1,49 @@
+Q: What is a Compatibility Matrix?
+--> A Compatibility Matrix in DBMS locking is a table that defines whether different types of database locks can coexist on the same data item.
+    It helps in managing concurrency control by determining if a new lock request can be granted without conflicting with an existing lock.
+
+-> Lock Compatibility Matrix
+---------------------------------------------------------------------------------
+Requested Lock ↓ \ Existing Lock →	  |   Shared(S)	        |  Exclusive(X)
+---------------------------------------------------------------------------------
+Shared (S)	                          |   ✅(Allowed)	    |  ❌(Not Allowed)
+---------------------------------------------------------------------------------
+Exclusive (X)	                      |   ❌(Not Allowed)	|  ❌(Not Allowed)
+---------------------------------------------------------------------------------
+
+-> Matrix Description :
+1. Row = Shared (S) and Column = Shared (S):
+    * Scenario: A transaction requests a Shared Lock (S) when another transaction already holds a Shared Lock (S) on the same data item.
+    * Outcome: The lock is compatible because both transactions only intend to read the data.
+    * Interpretation: Multiple readers can coexist; thus, the matrix shows ✓ (or 1).
+
+2. Row = Shared (S) and Column = Exclusive (X):
+    * Scenario: A transaction requests a Shared Lock (S) when another transaction already holds an Exclusive Lock (X).
+    * Outcome: Not Compatible (×) because writing is in progress, and no readers are allowed during writing.
+
+3. Row = Exclusive (X) and Column = Shared (S):
+    * Scenario: A transaction requests an Exclusive Lock (X) when another transaction already holds a Shared Lock (S).
+    * Outcome: Not Compatible (×) because readers are already accessing the data, and writing cannot proceed until they release their locks.
+
+4. Row = Exclusive (X) and Column = Exclusive (X):
+    * Scenario: A transaction requests an Exclusive Lock (X) when another transaction already holds an Exclusive Lock (X).
+    * Outcome: Not Compatible (×) because only one writer can access the data at a time.
+
+
+Q: Why Do We Need a Compatibility Matrix in DBMS Locking ?
+1. Ensures Data Integrity
+    * Prevents data inconsistency by controlling concurrent access to data.
+    * Ensures transactions do not read or modify data being changed by other transactions.
+
+2. Manages Concurrency
+    * Maximizes parallelism by allowing compatible locks to be granted simultaneously.
+    * Helps the DBMS scheduler make efficient locking decisions.
+
+3. Prevents Deadlocks & Blocking
+    * Reduces unnecessary transaction blocking.
+    * Helps in designing deadlock-free locking protocols.
+
+4. Optimizes Performance
+    * Prevents unnecessary delays by allowing shared locks when possible.
+    * Reduces overhead by only restricting conflicting operations.
+

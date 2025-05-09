@@ -1,0 +1,8 @@
+--> Sql Link : https://www.geeksforgeeks.org/what-is-temporary-table-in-sql/
+--> Mysql Link : https://www.geeksforgeeks.org/mysql-temporary-table/
+--> Video Link : https://www.youtube.com/watch?v=TjaSQEvHXfs&list=PLPkTMiu3oDfJs6BtVrg5WtcjYpyUezY9Q&index=6
+
+-- Create Temporary Table From Existing Table --
+CREATE TEMPORARY TABLE temp_table_name AS
+SELECT * FROM original_table_name;
+-- --

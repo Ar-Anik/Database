@@ -1,0 +1,32 @@
+Q: What is a Deadlock in DBMS?
+-> A deadlock in a Database Management System (DBMS) occurs when two or more transactions are waiting indefinitely for
+   each other to release the resources they need to proceed. This results in a circular wait condition where no
+   transaction can proceed, leading to a state of permanent blocking.
+
+-> A deadlock happens in a database when two or more transactions get stuck waiting for each other to release resources
+   and neither can continue.
+
+# Think of it like this:
+    1. Person A is holding a spoon and needs a fork to eat.
+    2. Person B is holding a fork and needs a spoon to eat.
+    3. Neither can continue eating because each is waiting for the other to let go.
+
+In a database, transactions can get stuck the same way when they lock data and wait for each other to release it.
+
+How Does Deadlock Occur?
+A deadlock typically occurs in a database when multiple transactions acquire locks on different resources and wait for each other to release locks. This happens under the following conditions:
+
+Necessary Conditions for Deadlock (Coffman Conditions)
+For a deadlock to occur, these four conditions must hold simultaneously:
+
+Mutual Exclusion:
+Each resource is assigned to only one transaction at a time and cannot be shared.
+
+Hold and Wait:
+A transaction holding at least one resource is waiting to acquire additional resources held by other transactions.
+
+No Preemption:
+A resource allocated to a transaction cannot be forcibly taken away; it must be released voluntarily by the transaction holding it.
+
+Circular Wait:
+A set of transactions exists where each transaction is waiting for a resource held by the next transaction in the set, forming a cycle.

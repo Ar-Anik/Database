@@ -1,0 +1,203 @@
+--> Suppose our e-commerce platform has the following tables:
+    1. customers — customer data
+    2. orders — order data
+    3. order_items — product-level detail of each order
+    4. products — product info
+
+We want to generate a sales report that shows:
+    Each customer’s total spent, total product quantity bought, and their most purchased product name, in the last 3 months.
+
+-- table --
+CREATE TABLE customers (
+    id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE products (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    price DECIMAL(10,2)
+);
+
+CREATE TABLE orders (
+    id INT PRIMARY KEY,
+    customer_id INT,
+    created_at DATE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE order_items (
+    id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Part 1: Total Amount Spent by Each Customer (last 3 months) --
+select customers.id as customer, SUM(products.price * order_items.quantity) as total
+from customers
+join orders on customers.id = orders.customer_id
+join order_items on orders.id = order_items.order_id
+join products on order_items.product_id = products.id
+where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+group by customers.id;
+--
+
+-- Part 2: Total Product Quantity Bought by Each Customer --
+select customers.id as customer, SUM(order_items.quantity) as total
+from customers
+join orders on customers.id = orders.customer_id
+join order_items on orders.id = order_items.order_id
+join products on order_items.product_id = products.id
+where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+group by customers.id;
+--
+
+-- Part 3: Most Purchased Product Name for Each Customer --
+-- without rank() --
+select *
+from (
+select customers.id as customer_id,
+    customers.name as name,
+    products.name as product,
+    SUM(order_items.quantity) as quantity
+from customers
+    join orders on customers.id = orders.customer_id
+    join order_items on orders.id = order_items.order_id
+    join products on order_items.product_id = products.id
+where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+group by customers.id, products.id
+order by customer_id, quantity ASC) as intermideate
+where intermideate.quantity = (
+    select max(intermideate_pro.total_quantity) from (
+        select SUM(order_items.quantity) as total_quantity
+        from orders
+            join order_items on orders.id = order_items.order_id
+        where orders.customer_id = intermideate.customer_id
+        group by order_items.product_id
+    ) as intermideate_pro
+);
+--
+
+-- with rank() --
+select *
+from (
+select customers.id as customer_id,
+    customers.name as name,
+    products.name as product,
+    SUM(order_items.quantity) as quantity,
+    rank() over (
+        partition by customer_id
+        order by SUM(order_items.quantity), products.name ASC
+    ) as rnk
+from customers
+    join orders on customers.id = orders.customer_id
+    join order_items on orders.id = order_items.order_id
+    join products on order_items.product_id = products.id
+where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+group by customers.id, products.id
+order by customer_id, quantity ASC) as intermideate
+where rnk = 1;
+--
+-- --
+
+-- Query All Together --
+select customers.id as customer_id,
+    customers.name as customer_name,
+    second_sub.total_quantity as total_quantity,
+    first_sub.total_amount as total_amount,
+    third_sub.most_purchase_product as most_purchase_product
+from customers
+LEFT JOIN (
+    select customers.id as customer_id,
+        customers.name as customer_name,
+        SUM(products.price * order_items.quantity) as total_amount
+    from customers
+        join orders on customers.id = orders.customer_id
+        join order_items on orders.id = order_items.order_id
+        join products on order_items.product_id = products.id
+    where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+    group by customers.id
+) as first_sub on customers.id = first_sub.customer_id
+LEFT JOIN (
+    select customers.id as customer_id,
+        customers.name as customer_name,
+        SUM(order_items.quantity) as total_quantity
+    from customers
+        join orders on customers.id = orders.customer_id
+        join order_items on orders.id = order_items.order_id
+        join products on order_items.product_id = products.id
+    where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+    group by customers.id
+) as second_sub on customers.id = second_sub.customer_id
+LEFT JOIN (
+    select *
+    from (
+        select customers.id as customer_id,
+            customers.name as name,
+            products.name as most_purchase_product,
+            SUM(order_items.quantity) as quantity,
+            rank() over (
+                partition by customer_id
+                order by SUM(order_items.quantity), products.name ASC
+            ) as rnk
+        from customers
+            join orders on customers.id = orders.customer_id
+            join order_items on orders.id = order_items.order_id
+            join products on order_items.product_id = products.id
+        where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+        group by customers.id, products.id
+        order by customer_id, quantity ASC) as intermideate
+        where rnk = 1
+) as third_sub on customers.id = third_sub.customer_id;
+-- --
+
+-- Optimize Query By Temporary Table --
+--
+create temporary table customer_order_summary as
+select customers.id as customer_id,
+    customers.name as customer_name,
+    SUM(products.price * order_items.quantity) as total_amount,
+    SUM(order_items.quantity) as total_quantity
+from customers
+    join orders on customers.id = orders.customer_id
+    join order_items on orders.id = order_items.order_id
+    join products on order_items.product_id = products.id
+where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+group by customers.id;
+--
+
+--
+create temporary table customer_top_product as
+select *
+from (
+    select customers.id as customer_id,
+        customers.name as name,
+        products.name as most_purchase_product,
+        SUM(order_items.quantity) as quantity,
+        rank() over (
+            partition by customer_id
+            order by SUM(order_items.quantity), products.name ASC
+        ) as rnk
+    from customers
+        join orders on customers.id = orders.customer_id
+        join order_items on orders.id = order_items.order_id
+        join products on order_items.product_id = products.id
+    where orders.created_at >= CURDATE() - INTERVAL 3 MONTH
+    group by customers.id, products.id
+    order by customer_id, quantity ASC) as intermideate
+where rnk = 1;
+--
+
+--
+select customers.id as customer_id,
+       customers.name as customer_name,
+       customer_order_summary.total_quantity as total_quantity,
+       customer_order_summary.total_amount as  total_amount,
+       customer_top_product.most_purchase_product as most_purchase_product
+from customers
+    join customer_order_summary on customers.id = customer_order_summary.customer_id
+    join customer_top_product on customers.id = customer_top_product.customer_id;
+--
