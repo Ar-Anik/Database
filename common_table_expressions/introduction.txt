@@ -1,0 +1,53 @@
+Q : What is a CTE ?
+--> A CTE (Common Table Expression) in MySQL is like creating a temporary result set (a named table) that we can use
+within a SELECT, INSERT, UPDATE, or DELETE statement. It makes complex queries easier to read and maintain.
+
+--> CTE stands for Common Table Expression. It is a temporary result set we define with a name using the WITH keyword.
+we can then use that name like a table in our main query.
+
+# There are two types of CTE :
+    * Recursive : Recursive CTE is specially used to work with the tree or hierarchically structured data.
+    * Non-Recursive.
+
+-- Non Recursive --
+
+-- Basic Syntax --
+WITH cte_name AS (
+    SELECT ...
+)
+SELECT * FROM cte_name;
+
+-- Example --
+suppose we have a table,
+create table employees (
+    id INT auto_increment primary key,
+    name varchar(50),
+    department varchar(50),
+    salary decimal(8, 2)
+)
+
+insert into employees (name, department, salary) values
+('Alice', 'IT', 60000.00),
+('Bob', 'HR', 50000.00),
+('Anik', 'IT', 45000.00),
+('Sourov', 'Marketing', 70000),
+('Joy', 'IT', 75000);
+
+-- we want to get employees from the IT department only --
+-- without cte --
+select *
+from employees
+where department = 'IT';
+-- --
+
+-- with cte --
+with it_employees as (
+    select * from employees
+    where department = 'IT'
+) select name, salary
+from it_employees;
+-- --
+--
+
+--> In above cte, it_employees is our CTE. It's like a temporary table containing only IT employees. Then we select from it.
+
