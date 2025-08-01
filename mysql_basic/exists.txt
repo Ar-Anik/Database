@@ -1,0 +1,25 @@
+`EXISTS` and `NOT EXISTS`
+
+Q : What is the EXISTS Operator in MySQL?
+-> The EXISTS operator is used to test for the existence of any record in a subquery. It returns TRUE if the
+subquery returns one or more records, otherwise FALSE.
+
+Syntax :
+SELECT column1, column2
+FROM table_name
+WHERE EXISTS (
+    SELECT col1, ... colN
+    FROM another_table
+    WHERE condition
+);
+
+Special Note :
+* Often used in WHERE clauses.
+
+* The EXISTS subquery doesn't need to return all matching rows. It only checks whether at least one
+match exists — once it finds one, it stops scanning. This makes EXISTS faster and more efficient,
+especially on large tables. IN and JOIN often need to process all matching rows. EXISTS just needs
+one match.
+
+* Typically used in correlated subqueries (where subquery refers to outer query columns). Here before
+where keyword is outer query and after exists is subquery.

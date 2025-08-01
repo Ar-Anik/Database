@@ -1,0 +1,36 @@
+--> The DISTINCT keyword in SQL is used to remove duplicate rows from the result of a SELECT query.
+Synx :
+    SELECT DISTINCT column1, column2, ... FROM table_name;
+
+--> How DISTINCT Works Internally (Step-by-Step):
+Let's say our table has this data:
+    name	subject	    score
+    Alice	Math	    90
+    Alice	Math	    90
+    Alice	Science	    85
+    Bob	    Math	    90
+    Bob	    Science	    85
+
+Query: SELECT DISTINCT name, subject FROM students;
+This query removes duplicates only when both name and subject are the same in a row.
+
+if i have query like :
+    SELECT DISTINCT column1, column2, ... column_n FROM table_name
+
+This DISTINCT keyword Remove rows that have exactly the same values in column1, column2, ..., column_n.
+So, no two rows in the final result will have the same combination of values in those selected columns.
+
+--> DISTINCT Equivalent to `GROUP BY` for unique combinations:
+    SELECT col1, col2
+    FROM table
+    GROUP BY col1, col2;
+This returns the same result as
+    SELECT DISTINCT col1, col2
+    from table.
+
+So, Both are equivalent :
+SELECT DISTINCT name, subject FROM students;
+And
+SELECT name, subject FROM students group by name, subject;
+
+

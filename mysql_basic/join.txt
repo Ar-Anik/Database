@@ -1,0 +1,23 @@
+-> A JOIN is used to combine rows from two or more tables based on a related column between them — typically a foreign key.
+
+In mysql 4 type of join exist :
+    1. INNER JOIN (or just JOIN)
+    2. LEFT JOIN (or LEFT OUTER JOIN)
+    3. RIGHT JOIN (or RIGHT OUTER JOIN)
+    4. CROSS JOIN
+
+-> Basic Traversal Logic: In a Mysql JOIN, the database engine compares each row from the left table with rows from the
+right table based on the ON condition. If matches are found, a combined row is created in the result. If multiple matches
+are found, multiple result rows are generated. If no match is found:
+    1. INNER JOIN : Row is discarded.
+    2. LEFT JOIN : Row is included with NULL values for the right side.
+    3. RIGHT JOIN : Row from right table is included, left side is filled with NULL
+    4. CROSS JOIN : All combinations are included — no matching condition is used at all
+
+-> Join Think of it as:
+  for each row in Table_A:
+    for each row in Table_B:
+        if join_condition matches:
+            add combined row to result
+
+This nested traversal is what gives basic joins their O(m × n) time complexity in the worst case.

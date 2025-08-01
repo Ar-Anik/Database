@@ -1,0 +1,16 @@
+# GROUP BY rules, requiring that, Every column in the SELECT list must either:
+    * Be included in the GROUP BY clause
+    * OR be inside an aggregate function like SUM(), COUNT(), MAX(), etc.
+
+So, below query show error :
+    SELECT col1, col2
+    FROM table
+    GROUP BY col1;
+because col2 not include by group by clause and any aggregate function.
+
+Q : What Does GROUP BY col1, col2, ..., colN Do?
+-> It groups rows in the result set by unique combinations of values across all the listed columns (col1 to colN).
+Group together all rows that have the same values in all of these columns. for each group, we can:
+    * Use aggregate functions (COUNT(), SUM(), AVG(), etc.)
+    * Return one row per group
+

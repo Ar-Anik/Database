@@ -1,0 +1,5 @@
+-> We cannot use aggregate functions directly in the WHERE clause. Because:
+    * WHERE is applied before rows are grouped.
+    * Aggregate functions like SUM(), AVG(), COUNT() etc. are calculated after grouping.
+
+So at the point when WHERE runs, the aggregates don't exist yet.

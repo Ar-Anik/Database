@@ -1,0 +1,47 @@
+-> The `ALL` operator in MySQL is used to compare a value with all the values returned by a subquery. ALL Returns
+a boolean value (TRUE or FALSE) as a result. Returns TRUE only if the comparison is true for every value returned
+by the subquery. In other words, ALL means:
+       The condition must be true for every value in the list.
+
+Syntax:
+SELECT ...
+FROM ...
+WHERE value operator ALL (subquery);
+
+Here, value is something we are checking. operator is a comparison (=, !=, <, >, <=, >=) subquery is a query that
+returns a list of values.
+
+-> another use of ALL keyword like :
+SELECT ALL name FROM employees;
+
+SELECT ALL ... is technically valid syntax in MySQL, but it has no effect — it's redundant and ignored by the
+MySQL engine. So SELECT ALL and SELECT are same.
+
+Suppose our query like :
+SELECT name
+FROM employees
+WHERE salary > ALL (
+    SELECT salary
+    FROM employees
+    WHERE department_id = 1
+);
+
+Assume, SELECT salary FROM employees WHERE department_id = 1 this subquery returns:
+60000
+62000
+
+Now our query becomes:
+SELECT name
+FROM employees
+WHERE salary > ALL (60000, 62000);
+
+ALL (60000, 62000) is logically the same as:
+    salary > 60000 AND salary > 62000
+
+So, the final query become :
+SELECT name
+FROM employees
+WHERE salary > 60000 AND salary > 62000;
+
+-> The ALL operator creates an AND-like logical relationship between comparisons.
+

@@ -1,0 +1,25 @@
+-> The HAVING clause is used to filter aggregated/grouped results after the GROUP BY clause. It works like WHERE,
+but it is applied after aggregation, not before.
+
+-> HAVING is designed to work with aggregate functions, and it's used to filter the results after GROUP BY and aggregation.
+
+-> Syntax of HAVING:
+SELECT column1, AGG_FUNC(column2)
+FROM table_name
+WHERE condition
+GROUP BY column1
+HAVING aggregate_condition;
+
+Q : Why Use HAVING Instead of WHERE?
+-> We cannot use aggregate functions in WHERE, so the following will fail:
+----------- Show Error ---------------
+    SELECT region, SUM(sales)
+    FROM sales_data
+    WHERE SUM(sales) > 2000
+    GROUP BY region;
+---------------------------------------
+This gives an error because WHERE doesn’t recognize SUM(sales) (it's not computed yet).
+
+-> The HAVING clause works on either:
+    1. Aggregate functions (e.g., SUM(), COUNT(), AVG(), etc.)
+    2. Columns used in the GROUP BY clause

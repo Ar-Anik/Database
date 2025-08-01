@@ -1,53 +1,44 @@
 Q : What is a CTE ?
---> A CTE (Common Table Expression) in MySQL is like creating a temporary result set (a named table) that we can use
-within a SELECT, INSERT, UPDATE, or DELETE statement. It makes complex queries easier to read and maintain.
+--> A CTE (Common Table Expression) in MySQL is like creating a temporary result set (a named table)
+that we can use within a SELECT, INSERT, UPDATE, or DELETE statement. It makes complex queries easier
+to read and maintain.
 
---> CTE stands for Common Table Expression. It is a temporary result set we define with a name using the WITH keyword.
-we can then use that name like a table in our main query.
-
-# There are two types of CTE :
-    * Recursive : Recursive CTE is specially used to work with the tree or hierarchically structured data.
-    * Non-Recursive.
-
--- Non Recursive --
+--> A CTE (Common Table Expression) is a temporary named result set that we define before our main query,
+and use it like a virtual table in the query.
+It helps to:
+    * Break complex queries into readable parts.
+    * Reuse logic in the same query.
+    * Organize subqueries more cleanly.
 
 -- Basic Syntax --
 WITH cte_name AS (
     SELECT ...
 )
-SELECT * FROM cte_name;
-
--- Example --
-suppose we have a table,
-create table employees (
-    id INT auto_increment primary key,
-    name varchar(50),
-    department varchar(50),
-    salary decimal(8, 2)
-)
-
-insert into employees (name, department, salary) values
-('Alice', 'IT', 60000.00),
-('Bob', 'HR', 50000.00),
-('Anik', 'IT', 45000.00),
-('Sourov', 'Marketing', 70000),
-('Joy', 'IT', 75000);
-
--- we want to get employees from the IT department only --
--- without cte --
-select *
-from employees
-where department = 'IT';
--- --
-
--- with cte --
-with it_employees as (
-    select * from employees
-    where department = 'IT'
-) select name, salary
-from it_employees;
--- --
+SELECT ...
+FROM cte_name;
 --
 
---> In above cte, it_employees is our CTE. It's like a temporary table containing only IT employees. Then we select from it.
+Here,
+1. WITH
+Keyword that starts the definition of one or more CTEs.
+
+2. cte_name
+A name we choose for the CTE (like a temporary table or view). Name Must be a valid SQL
+identifier (e.g., my_cte, avg_salary, etc.).
+
+3. AS ( ... )
+The AS keyword is required. Inside the parentheses (...) goes a complete SQL query (usually a SELECT).
+
+4. SELECT ... FROM cte_name
+After the WITH clause ends, we use the CTE name in our main query just like a table. The CTE name refer
+is like a temporary table. we can't reference a CTE directly by column unless we JOIN it (e.g., CROSS JOIN
+or INNER JOIN) or use it as a subquery inside our condition.
+
+--> A CTE (Common Table Expression) only exists during the execution of the single query that immediately
+follows it. After that query ends — the CTE is gone.(CTE lives only during that single query)
+
+
+# There are two types of CTE :
+    * Recursive : Recursive CTE is specially used to work with the tree or hierarchically structured data.
+    * Non-Recursive.
 

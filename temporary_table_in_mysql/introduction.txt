@@ -5,4 +5,19 @@
 -- Create Temporary Table From Existing Table --
 CREATE TEMPORARY TABLE temp_table_name AS
 SELECT * FROM original_table_name;
+
+CREATE TEMPORARY TABLE temp_table_name
+LIKE original_table_name;
+
+Delete, Update and Insert Value like Normal Table.
 -- --
+
+-- --
+In MySQL, there is no built-in SQL command to show list all temporary tables directly, because:
+Temporary tables are only visible to the current session (connection) that created them. They are not stored
+in the standard information_schema or SHOW TABLES output for global visibility.
+-- --
+
+-- for practice temprary table in sql --
+https://onecompiler.com/sqlserver/43gxwgmhw
+--

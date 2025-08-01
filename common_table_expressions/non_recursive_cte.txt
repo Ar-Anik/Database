@@ -1,0 +1,117 @@
+Q : How does a non-recursive CTE handle temporary data in memory? What happens when the CTE query is executed, and where is the data stored for use by the main query?
+
+Q : What Happens Internally When we Use a Non-Recursive CTE?
+-> CTE example :
+WITH avg_salary_cte AS (
+    SELECT AVG(salary) AS avg_salary
+    FROM employees
+) SELECT *
+FROM employees
+WHERE salary > (SELECT avg_salary FROM avg_salary_cte);
+
+-> Step 1: SQL Parsing & Compilation Phase
+When the SQL engine receives the query, it performs:
+    * Parsing – breaks the query into tokens.
+    * Syntax checking – validates SQL structure.
+    * Binding – maps table and column names.
+    * Query plan generation – creates an execution plan.
+    * Optimization – chooses the most efficient way to run the query.
+At this point, the CTE is still just logical metadata — nothing has run yet.
+
+-> Step 2: CTE Handling During Optimization
+Now the optimizer decides how to treat the CTE. Two possible strategies:
+
+# Strategy 1: Inlining (Query Substitution)
+    * The optimizer copies the CTE query directly into the main query as if we had written it inline.
+    * No intermediate storage is used — it’s part of the final query plan.
+    * The CTE is not executed separately. It’s just a placeholder during parsing.
+
+Example :
+The SQL engine rewrites:
+    WITH avg_salary_cte AS (
+        SELECT AVG(salary) AS avg_salary FROM employees
+    )
+    SELECT * FROM employees
+    WHERE salary > (SELECT avg_salary FROM avg_salary_cte);
+
+As
+
+    SELECT * FROM employees
+    WHERE salary > (
+        SELECT AVG(salary) FROM employees
+    );
+
+Memory usage: Minimal
+Since there’s no physical materialization, memory is used like any normal query. In most databases
+(MySQL, PostgreSQL ≥12, SQL Server), non-recursive single-use CTEs are inlined by default.
+
+
+# Strategy 2: Materialization
+In some cases, the database engine executes the CTE first, stores the result in memory or temporary disk,
+then uses it in the main query.
+
+Q : When does this happen?
+    * The CTE is used multiple times.
+    * The CTE is large or complex.
+    * Manual or automatic hints (e.g., PostgreSQL MATERIALIZED).
+    * The optimizer thinks it’s more efficient.
+
+Q : How memorization happen?
+    * The CTE is executed once.
+    * The result is cached in:
+        1. In-memory buffers, or
+        2. Temporary tables on disk, if large
+    * The main query then reads from that cached result.
+
+Memory usage: Moderate to high
+Depends on result size and caching policy.
+
+
+--> Problem Leetcode :
+> Link : https://leetcode.com/problems/second-highest-salary/description/
+> Solution :
+WITH salary_cte AS (
+    SELECT salary,
+           rank() OVER (ORDER BY salary DESC) AS rnk
+    FROM (SELECT DISTINCT salary FROM Employee) AS uniq_salary
+)
+SELECT
+    (SELECT salary FROM salary_cte WHERE rnk = 2) AS SecondHighestSalary;
+
+
+> Link : https://leetcode.com/problems/department-highest-salary/description/
+> Solution :
+with cte as (
+  select Employee.*, rank() over (
+      partition by departmentId
+      order by salary DESC
+    ) as rnk
+  from Employee
+) select Department.name as Department,
+         cte.name as Employee,
+         cte.salary as Salary
+  from cte join Department on cte.departmentId = Department.id
+  where cte.rnk = 1;
+
+
+> Link : https://leetcode.com/problems/department-top-three-salaries/
+> Solution :
+with cte_name as (select salary, departmentId, rank() over
+    (partition by departmentId order by salary DESC) as rnk
+from (select distinct salary, departmentId from Employee) as e order by departmentId)
+select Department.name as Department, Employee.name as Employee, Employee.salary as Salary
+from Employee join Department on Employee.departmentId = Department.id
+where salary in (select cte_name.salary from cte_name where rnk in (1, 2, 3) and cte_name.departmentId = Department.id);
+
+
+> Link : https://leetcode.com/problems/delete-duplicate-emails/description/
+> Solution :
+WITH cte_name AS (
+    SELECT MIN(id) AS min_id
+    FROM Person
+    GROUP BY email
+)
+DELETE FROM Person
+WHERE id NOT IN (
+    SELECT min_id FROM cte_name
+);
