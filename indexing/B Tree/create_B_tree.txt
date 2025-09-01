@@ -1,0 +1,155 @@
+Link : https://www.youtube.com/watch?v=YUtUNlLNB5c&list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y
+
+Q : Insert the following keys into B-Tree, if order of B-Tree = 4. keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+When we say B-Tree of order m = 4, it means:
+1. Maximum children = m = 4
+→ Each node can have at most 4 children.
+
+2. Maximum keys = m - 1 = 3
+→ Each node can have at most 3 keys.
+
+3. Minimum children = ⌈m/2⌉ = 2 (except root)
+→ Each non-root node must have at least 2 children.
+
+4. Minimum keys = ⌈m/2⌉ - 1 = 1 (except root)
+→ Each non-root node must have at least 1 key.
+
+5. All leaf nodes are at the same level.
+
+6. Overflow: a node would have max_keys + 1 keys after insertion (here that means 4 keys → overflow).
+
+7. Split: when a node overflows, you divide its keys into two nodes and promote one key to the parent.
+
+8. Promote / Promotion: the chosen key moved up to the parent during split.
+
+# Start inserting keys :
+1. Insert 1
+Tree is empty. Root = [1]
+
+2. Insert 2
+Root has space (max = 3 keys). Insert 2 into root. Root = [1, 2]
+
+3. Insert 3
+Root has space. Insert 3. Root = [1, 2, 3]
+
+4. Insert 4
+Root is full ([1,2,3]). Inserting 4 would give [1,2,3,4] → overflow (4 keys). According to the split
+rule (even number n=4) promote the ⌈4/2⌉ = 2-nd key → promote 2. Split [1,2,3,4] into:
+    * Left child: keys before promoted key → [1]
+    * Promote: 2 (becomes the new root key)
+    * Right child: keys after promoted key → [3,4]
+New tree:
+              [2]
+             /   \
+          [1]   [3,4]
+
+A split of the root creates a new root and increases tree height by 1.
+
+# Here, Two possible conventions
+-> When splitting even number of keys, there are two common approaches in literature/implementations:
+
+1. Convention A (used in my step-by-step explanation earlier)
+Promote the ⌈n/2⌉-th key (1-based index). For [1,2,3,4], n=4 → ⌈4/2⌉ = 2 → promote 2.
+
+2. Convention B (equally valid in some texts/implementations)
+Promote the ⌊n/2⌋+1-th key (the “higher middle”). For [1,2,3,4], n=4 → ⌊4/2⌋+1 = 3 → promote 3.
+
+5. Insert 5
+- Start at root [2].
+- 5 > 2 → go to right child [3,4] (a leaf). Right child [3,4] has space (2 keys), insert 5 → [3,4,5].
+
+              [2]
+             /   \
+          [1]   [3,4,5]
+
+Inserting into leaf only; no overflow yet (node has 3 keys allowed).
+
+6. Insert 6
+- Root [2].
+- 6 > 2 → go right [3,4,5]. Right child is full (3 keys). Inserting 6 would make [3,4,5,6] → overflow (4 keys).
+- For n = 4 keys, promote ⌈4/2⌉ = 2-nd key (1-based) → promote 4. Split [3,4,5,6] into:
+    * Left: [3]
+    * Promote 4 → insert into parent (root)
+    * Right: [5,6]
+- Parent (root) before: [2], after inserting 4 (kept sorted) → [2,4]. Children now:
+    * left child [1]
+    * middle [3]
+    * right [5,6].
+
+               [2, 4]
+              /  |   \
+           [1] [3]  [5,6]
+
+Splitting a child of root promoted 4 into the root; root became internal with 2 keys.
+
+7. Insert 7
+- Root [2,4].
+- 7 > 4 → go to rightmost child [5,6].
+- [5,6] has space → insert 7 → [5,6,7].
+
+               [2, 4]
+              /  |   \
+           [1] [3]  [5,6,7]
+
+Leaf filled to max (3 keys). No split yet.
+
+8. Insert 8
+- Root [2,4].
+- 8 > 4 → go rightmost [5,6,7] (full).
+- Insert 8 → [5,6,7,8] → overflow (4 keys).
+- For n = 4, promote ⌈4/2⌉ = 2-nd key → promote 6.
+- Split into:
+    * Left: [5]
+    * Promote 6 → insert into root
+    * Right: [7,8]
+
+- Root before: [2,4] → after inserting 6 (in sorted order) → [2,4,6]. Children become: [1] [3] [5] [7,8].
+
+                 [2, 4, 6]
+               /    |    |   \
+            [1]   [3]  [5]  [7,8]
+
+Root now contains 3 keys (max allowed for order=4). Its fanout (children count) is 4.
+
+9. Insert 9
+- Root [2,4,6].
+- 9 > 6 → go to rightmost child [7,8].
+- [7,8] has space → insert 9 → [7,8,9].
+
+                 [2, 4, 6]
+               /    |    |   \
+            [1]   [3]  [5]  [7,8,9]
+
+Rightmost leaf now full with 3 keys.
+
+10. Insert 10
+- Root [2,4,6] (currently full).
+- 10 > 6 → go to rightmost child [7,8,9] (full).
+- Inserting 10 into [7,8,9] gives [7,8,9,10] → overflow (4 keys).
+- For n = 4, promote ⌈4/2⌉ = 2-nd key → promote 8.
+- Split [7,8,9,10] into:
+    * Left: [7]
+    * Promote: 8 → must be inserted into parent (root)
+    * Right: [9,10]
+- Now we must insert 8 into the root [2,4,6]. The root currently has 3 keys (full). Inserting 8 would make root
+temporarily [2,4,6,8] → root overflow (4 keys).
+
+- Split the root itself. When splitting a node with n = 4 keys, promote ⌈4/2⌉ = 2-nd key
+(the 2nd key in [2,4,6,8]) → promote 4.
+
+- Splitting [2,4,6,8] around promote 4 gives:
+    * Left root child: [2]
+    * New root: [4]
+    * Right root child: [6,8]
+- Attach children appropriately (children of the left/right halves are the subtrees created earlier). The full
+tree becomes:
+
+                        [4]
+                     /       \
+                  [2]        [6, 8]
+                 /   \      /  |   \
+              [1]  [3]  [5] [7] [9,10]
+
+Here the children under left and right nodes are, left subtree of root has internal node [2] with children [1]
+and [3]. Right subtree [6,8] has three children: [5], [7], [9,10].

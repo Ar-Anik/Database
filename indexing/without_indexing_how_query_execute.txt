@@ -1,0 +1,88 @@
+Q : Who Runs the Query? (DBMS & CPU)
+- When we run a SQL query (e.g., SELECT * FROM users WHERE age=30), it is executed by the DBMS software (MySQL, PostgreSQL, etc.).
+- The DBMS runs as a process on the CPU.
+- CPU executes instructions of the DBMS program — it never directly fetches from disk; it relies on RAM and OS.
+Key point: CPU = “executor,” DBMS = “recipe,” RAM = “working space,” Disk = “storage warehouse.”
+
+# CPU, RAM, and Disk – Speed Differences
+
+| Component | Speed                 | Role                                  |
+| --------- | --------------------- | ------------------------------------- |
+| CPU       | Fastest (ns)          | Executes instructions, reads from RAM |
+| RAM       | Fast (hundreds ns)    | Holds temporary pages/data for CPU    |
+| Disk      | Slow (SSD μs, HDD ms) | Permanent storage of table pages      |
+------------------------------------------------------------------------------
+CPU cannot directly read disk — it always reads from RAM. That’s why RAM is essential.
+
+Q : What is I/O?
+- I/O (Input/Output) = transferring data between Disk and RAM.
+- CPU only sees RAM; if needed page is missing in RAM, the OS and disk controller perform I/O to load the data into RAM.
+- RAM itself does not fetch or search; it’s passive memory.
+Analogy: CPU = chef, RAM = kitchen counter, Disk = pantry, I/O = helper fetching ingredients from pantry to counter.
+
+Another Way,
+- I/O (Input/Output) task = one operation where data is transferred between disk and RAM.
+- In databases, data is always moved in pages/blocks, not row by row.
+- Page size = usually 4KB–16KB (depends on DBMS and configuration).
+So:
+    * CPU/DBMS requests a page.
+    * Disk controller fetches that page from SSD/HDD.
+    * OS copies that page into RAM buffer pool.
+This entire process is considered one I/O task.
+
+> Important Notes
+- If a table has 1,000 pages and no cache, a full table scan → 1,000 I/O tasks.
+- If some pages are already in RAM buffer → no I/O for those pages (cache hit).
+- Each I/O task is much slower than CPU or RAM access, so minimizing I/O is key for database performance.
+
+-> Step-by-Step Query Execution (Without Indexing) [query : SELECT * FROM users WHERE age=30]
+
+Step 1: Query Parsing & Planning
+- We send SQL query → DBMS process runs it on CPU.
+- DBMS parses SQL → builds internal tree structure.
+- DBMS optimizer decides plan:
+    * No index → plan = full table scan
+    * Index exists → plan = index scan (later)
+
+Step 2: Execution Begins
+- CPU executes DBMS instructions to fetch table data.
+- DBMS first checks RAM (buffer pool) for required pages:
+    * Cache hit: page is in RAM → CPU reads directly → no I/O needed.
+    * Cache miss: page is not in RAM → CPU/DBMS asks OS to fetch → I/O starts.
+
+Step 3: Disk I/O (If Cache Miss)
+- OS sends request to disk controller.
+- Disk fetches the page/block (usually 4KB–16KB).
+- Disk controller sends page → OS → copied into RAM.
+- Now CPU can read the page.
+Important: RAM never “searches disk” — disk + OS do that.
+
+Step 4: Table Scan
+Once pages are in RAM:
+    - CPU executes DBMS code.
+    - Scans row by row in RAM.
+    - Checks condition (age = 30) for each row.
+    - Stores matching rows in DBMS output buffer.
+Repeat for all pages until table fully scanned.
+
+Step 5: Returning Results
+
+1. While Scanning Rows
+- CPU executes DBMS code → checks each row in the page (in RAM).
+- If row matches (e.g., age = 30):
+    * CPU copies the row into a special DBMS Output Buffer (a memory area reserved for query results).
+So the DBMS output buffer = temporary holding place in RAM for matched rows.
+
+2. After Scanning is Done
+- When all pages are processed (full table scan without index), the DBMS output buffer now contains all the matching rows.
+- These rows are not yet with the client; they are still inside the DBMS’s RAM space.
+> Example: If 50 rows match, they are all inside DBMS output buffer.
+
+3. Hand Over to Operating System
+- CPU (running DBMS code) now needs to send results to client (MySQL Workbench, pgAdmin, Python app, etc.).
+- To do this, it uses system calls to the Operating System (OS).
+> Example: DBMS calls an OS function like write() on a network socket or terminal.
+At this point, the OS takes the rows from DBMS output buffer and copies them into the OS Kernel buffer.
+
+> This is how DBMS gives results to OS: “Here, deliver this to the client.”
+

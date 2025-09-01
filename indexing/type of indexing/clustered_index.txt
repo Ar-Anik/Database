@@ -1,0 +1,125 @@
+Link : Fundamentals of Database Systems --> From 459 number page (For SQL not Mysql InnoDB)
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+-> A clustered index is an index where the table’s data rows are physically stored on disk in the order of the index key.
+This means the index and the table are stored together. In MySQL (with InnoDB engine), the Primary Key is the clustered index.
+
+So, when we create a primary key, InnoDB:
+- Stores the actual table rows in a B+ Tree structure.
+- The leaf nodes of this B+ Tree contain the actual row data (not just pointers).
+
+-> That’s why we say:  A table can have only one clustered index, because data can only be physically ordered in one way.
+
+we create this table:
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    age INT
+) ENGINE=InnoDB;
+
+Here:
+- id is the Primary Key, so id is the clustered index.
+- The rows in the table are stored in disk sorted by id.
+
+we insert in random order:
+INSERT INTO users VALUES (10, 'Alice', 25);
+INSERT INTO users VALUES (3, 'Bob', 30);
+INSERT INTO users VALUES (7, 'Charlie', 22);
+
+-> Physically on disk (B+ Tree leaf nodes), the rows will be stored as:
+[3, Bob, 30] → [7, Charlie, 22] → [10, Alice, 25]
+
+Even though we inserted 10 first, clustered index reorganized the data to keep them sorted by id.
+
+-> Key Points about Clustered Index
+1. Only one per table
+    - Because the table rows can only be stored in one physical order.
+
+2. Leaf nodes of clustered index contain actual data
+    - Unlike a non-clustered index where leaf nodes only contain pointers.
+
+3. Primary Key = Clustered Index in InnoDB
+    - If we don’t define a primary key:
+        * MySQL looks for the first UNIQUE NOT NULL key to use.
+        * If not found, InnoDB creates a hidden 6-byte row ID as clustered index.
+
+4. Faster access with primary key lookups
+    - Because finding a primary key directly navigates the clustered B+ Tree to the data.
+
+5. Clustered index affects insert/update speed
+    - Inserts must place the row in the correct sorted position.
+    - Updates to the indexed column may cause row movement.
+
+
+-> Primary Key vs. Primary Index vs. Clustered Index:
+- A primary key is a constraint that ensures a column (or set of columns) uniquely identifies each row in a table.
+It does not allow duplicates or NULL values.
+
+- A primary index is an index created on the primary key to facilitate fast lookups and enforce uniqueness. In many
+database systems (e.g., SQL Server, MySQL InnoDB), the primary index is by default a clustered index, but this is
+not universally true across all databases.
+
+- A clustered index determines the physical order of data in the table. There can only be one clustered index per
+table because the data can only be physically sorted in one way. If a primary key exists, the clustered index is
+often created on the primary key, making the primary index a clustered index. However, a clustered index can also
+be created on a non-primary key column, and it can be non-unique in some cases.
+
+
+Q : How a Clustered Index Works on a Primary Key
+- When a clustered index is created on a primary key (which is the default in many RDBMS like SQL Server and MySQL
+InnoDB), the following happens:
+
+1. Physical Data Ordering:
+- The table’s data rows are physically stored on disk in the order of the primary key values. For example, in a
+table Students with a primary key StudentID, the data is sorted and stored by StudentID (e.g., 1, 2, 3, ...). This
+physical ordering improves retrieval performance for queries involving the primary key.
+
+2. Uniqueness Enforcement:
+- Since the primary key is unique, each key in the clustered index maps to exactly one row. There are no
+duplicates, so the index structure does not need to handle multiple pointers for a single key.
+
+------------------------------------------ Only for SQL --------------------------------------------------------
+# Addressing the Duplicate Key Scenario
+Since a primary key cannot have duplicates, the scenario where a clustered index key maps to multiple rows (e.g.,
+(key, [pointer1, pointer2, ...])) only applies to a non-unique clustered index created on a column that is not a
+primary key.
+
+Suppose we have a table Employees:
+EmployeeID (Primary Key) | DepartmentID | Name
+------------------------|-------------|------
+1                      | 10          | Alice
+2                      | 10          | Bob
+3                      | 20          | Carol
+4                      | 10          | Dave
+
+-> Primary Key: EmployeeID (unique, with a default clustered index in SQL Server).
+
+-> Scenario: We decide to create a clustered index on DepartmentID instead of EmployeeID. Since DepartmentID is
+not the primary key and allows duplicates (multiple employees can be in the same department), this is a non-unique
+clustered index.
+
+-> How It Works:
+The table’s data is physically reordered by DepartmentID. For example:
+DepartmentID (Clustered Index) | EmployeeID | Name
+-----------------------------|-----------|------
+10                           | 1         | Alice
+10                           | 2         | Bob
+10                           | 4         | Dave
+20                           | 3         | Carol
+
+The clustered index structure maps each DepartmentID to one or more rows. For DepartmentID = 10, the index entry
+logically looks like:
+        DepartmentID: 10 | Pointers: [Row for EmployeeID 1, Row for EmployeeID 2, Row for EmployeeID 4]
+
+-> In the B+ tree, the leaf nodes for DepartmentID = 10 contain the actual rows (or pointers to them), and the
+database handles duplicates by associating multiple rows with the same key.
+----------------------------------------------------------------------------------------------------------------
+
+-> In InnoDB, we cannot create a clustered index on a non-primary key column like DepartmentID because the
+clustered index is always the primary key (or a substitute).
+
+-> To handle a non-unique column like DepartmentID with duplicates (e.g., (key, [pointer1, pointer2, pointer3, ...])),
+we create a secondary index (non-clustered) on DepartmentID. This secondary index can map a single key to multiple rows.
+
+-> Alternatively, we can use a composite primary key to include a non-unique column in the clustered index, allowing
+duplicates in part of the key.

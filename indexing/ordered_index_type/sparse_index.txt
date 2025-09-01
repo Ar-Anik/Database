@@ -1,0 +1,30 @@
+Q : What is a Sparse Index?
+-> A sparse index is a type of database index in which not every record of the table has an index entry.
+Instead, only some records (often one per block/page) have entries in the index. Each index entry acts
+as a representative (anchor) for a block (or group) of records in the table.
+
+When searching, the database uses the sparse index to find the nearest entry, and then it scans within the
+block to find the exact record.
+
+# Suppose we have this table of students sorted by student_id:
+| student_id  | name |
+| ----------- | ---- |
+| 1           | A    |
+| 2           | B    |
+| 3           | C    |
+| 4           | D    |
+| 5           | E    |
+| 6           | F    |
+----------------------
+
+In Sparse Index Only some rows have an index entry (say, one entry per block of size 3). Index:
+1 → Block [1,2,3]
+4 → Block [4,5,6]
+
+if we want to search for student_id = 5:
+    - Look at index → 4 → Block [4,5,6]
+    - Go inside that block and find row with student_id = 5.
+
+- A sparse index does not store entries for every record — only for block anchors — which saves space but may
+require scanning inside the block to find the exact record.
+

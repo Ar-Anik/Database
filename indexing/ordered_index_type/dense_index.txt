@@ -1,0 +1,27 @@
+--> A dense index has at least one index entry for every record in the table. Each index entry maps a key value
+to the exact row location.
+
+Dense Index = “One-to-One Mapping”.
+
+--> For every row in the main table, there is one entry in the index table. So if the table has 1 million rows,
+the dense index will also have 1 million entries.
+
+
+> There are two common dense layouts:
+1. One index entry per record:
+    * Data entry = (K, RowID) for each row.
+    * If a key appears 3 times, we have 3 separate entries in the index.
+2. One index entry per distinct key + a pointer list:
+    * Data entry = (K, [RowID, RowID, ...]).
+    * If a key appears 3 times, we have 1 index entry whose payload is a list of RowIDs (sometimes called a
+      “posting list” or “bucket”).
+    * Still considered dense, because every record with key K is reachable without scanning data blocks.
+
+In both forms, every record with the search key is represented—hence “dense.”
+
+Q : What exactly is “dense” here?
+-> When we index a column K, a dense index stores enough entries so that no qualifying record is skipped. we
+can hop from the index directly to every matching row without scanning data blocks to find the first row inside.
+
+
+-> Most relational databases implement dense indexes as a B+-Tree.

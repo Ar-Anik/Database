@@ -1,0 +1,102 @@
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+1. What is a Full-Text Index in MySQL?
+-> A Full-Text Index is a special type of index in MySQL used to perform full-text searches on text columns (CHAR,
+VARCHAR, TEXT). Instead of just finding exact matches (like normal indexes), full-text indexes allow searching for
+words, phrases, and natural language queries inside large text fields.
+
+Think of it as a search engine inside MySQL that helps us search through documents, descriptions, or articles quickly.
+
+-> Example use cases:
+- Searching product descriptions in an e-commerce site.
+- Implementing a blog/article search feature.
+- Finding documents containing specific keywords.
+
+-> How Full-Text Index Works
+1. Full-text search tokenizes the text into words.
+
+> Tokenization
+- When we insert text into a FULLTEXT indexed column, MySQL:
+    * Splits text into tokens (words) → e.g. "The database is very fast, db" → ["the", "database", "is", "very", "fast", "db"]
+- Removes stopwords → MySQL ignores common words like the, is, an, on, at (these don’t add much meaning).
+    * Result after removing stopwords: ["database", "very", "fast"]
+- Applies minimum word length rule → By default, words shorter than 4 characters are ignored (configurable).
+    * So "db" would be ignored.
+- These tokens are stored in the inverted index, which maps words → rows that contain them.
+
+> Relevance Ranking (How results are scored)
+- When we run a search with:
+SELECT id, title, body, MATCH(title, body) AGAINST('database fast' IN NATURAL LANGUAGE MODE) AS score
+FROM articles
+ORDER BY score DESC;
+
+MySQL computes a relevance score for each row.
+
+- The scoring is based on:
+1. TF (Term Frequency) → How many times a word appears in the row. More = higher relevance.
+2. IDF (Inverse Document Frequency) → Rare words across the dataset are more important.
+    e.g., word “database” appearing in only 10 rows is more meaningful than “fast” appearing in 10,000 rows.
+3. Field Length Normalization → Matches in short text fields (like a title) are weighted higher than in long ones (like body).
+4. Query Match → If the row contains all words from the query, it scores higher than rows containing only some.
+
+# Example
+Suppose we have this data:
+| id | body                                 |
+| -- | ------------------------------------ |
+| 1  | "MySQL database indexing is fast"    |
+| 2  | "Database engines are very powerful" |
+| 3  | "The engine is running fast"         |
+---------------------------------------------
+
+Now Run :
+SELECT id, body, MATCH(body) AGAINST('database fast' IN NATURAL LANGUAGE MODE) AS score
+FROM articles
+ORDER BY score DESC;
+
+Result might look like:
+| id | body                               | score |
+| -- | ---------------------------------- | ----- |
+| 1  | MySQL database indexing is fast    | 2.30  |
+| 2  | Database engines are very powerful | 1.10  |
+| 3  | The engine is running fast         | 0.80  |
+---------------------------------------------------
+
+- Row 1 scores highest because it has both database and fast close together.
+- Row 2 mentions database strongly but no fast.
+- Row 3 has fast but no database.
+
+
+2. It supports boolean operators (+, -, *) and natural language search.
+
+3. It finds relevance ranking, meaning results can be ordered by how closely they match the search query.
+
+# Notes
+Storage engines:
+- Full-Text Index is supported in MyISAM (old) and InnoDB (modern, default).
+- Column types: Only works on CHAR, VARCHAR, or TEXT.
+- Stopwords & minimum length:
+    * Default minimum word length = 4 characters (configurable).
+    * Stopwords are ignored unless customized.
+
+
+
+-> How to Create Full-Text Index in MySQL
+create table articles(
+    id int auto_increment primary key,
+    title varchar(200),
+    body text,
+    FULLTEXT (title, body)        -- Full-Text index on both columns
+);
+
+- Adding to an Existing Table
+ALTER TABLE articles ADD FULLTEXT (title, body);
+
+- Using Full-Text Index in Queries
+select id, title, body
+from articles
+where MATCH(title, body) AGAINST('database indexing' IN NATURAL LANGUAGE MODE);
+
+Here,
+1. MATCH(column1, column2, ...) → Which columns to search.
+2. AGAINST('your search text') → Search query.
+

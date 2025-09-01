@@ -1,0 +1,93 @@
+Link : https://www.youtube.com/watch?v=Ua08uVgsk4k
+Link : Fundamentals of Database Systems --> From 462 number page.
+
+-> Secondary Index
+- A secondary index provides an additional way to access a file, besides the primary access method. It can be
+built on a candidate key (unique) or a non-key field (duplicate values allowed).
+
+-> Structure:
+- Key field (K): Same type as the indexed field in the data file.
+- Pointer (P): Points to either the record or the block in the data file.
+
+There can be multiple secondary indexes for the same file.
+
+-> Important Points:
+- Data file is not ordered by the secondary key or candidate key → cannot use block anchors.
+- If the pointer is a block pointer, after fetching the block, we still need to search inside it.
+- Secondary index usually requires more storage and slightly longer search time than a primary index due to more entries.
+- Without a secondary index, searching a record requires linear search, which is slower.
+- Without a primary index, we can still do binary search on the main file.
+
+
+-> When the index is built on a non-key field, many records can have the same value.
+Implementation Options:
+1. Multiple Entries (Dense Index)
+- Create one index entry per record, even if they share the same key value.
+- Example: If 5 students have Dept = "CSE", there will be 5 separate index entries.
+
+2. Variable-Length Entries
+- One index entry for each unique key value.
+- Each entry stores a list of pointers → one pointer for each block containing records with that value.
+- Example: Dept = "CSE" → [P1, P2, P3] (pointers to blocks with "CSE" students).
+
+3. Fixed-Length Entries + Extra Level (Most Common)
+- One index entry per unique value (fixed size).
+- Each entry’s pointer points to a block of record pointers.
+- If too many records → use linked list / cluster of blocks.
+- Needs extra block access, but makes insertion & searching simpler.
+
+Key Points:
+- Retrieval via secondary index on a non-key field may take extra block accesses (due to pointer blocks).
+- Provides a logical ordering of records by the indexing field.
+- Helps in complex selection queries without scanning all records.
+
+Q : Why Secondary Index Uses Dense Index?
+- Secondary key points to a non-primary key column, and the data file is not sorted on that column.
+- To find a record with a secondary key efficiently, we need an entry for every record.
+- Dense index ensures every key value has a pointer, making searches accurate.
+
+
+Multilevel Index
+1) Core idea
+- A multilevel index treats the (single-level) index itself as an ordered file and builds an index on top of
+it, repeating until the top level fits in one disk block.
+- Each level cuts the search space by the fan-out fo (a.k.a. the index blocking factor bfr), which is the number
+of index entries that fit in one block.
+
+2) Basic Idea
+- Level-1 = Normal index (points to data blocks).
+- Level-2 = Index of Level-1 (points to index blocks).
+- Level-3 = Index of Level-2 … and so on.
+- We keep going until the top level fits in one block.
+
+This way, we reduce the search very fast.
+
+3) How to build it
+- Build level-1 (base) index over the data file.
+    * It must have distinct keys and fixed-length entries.
+    * Each entry = (key, block_address) (a block anchor).
+
+- Compute blocks at level-1: b1 = ceil(r1 / fo).
+
+- If b1 > 1, build level-2 (a primary index on level-1):
+    * One entry per level-1 block, so r2 = b1.
+    * Blocks at level-2: b2 = ceil(r2 / fo).
+
+- If b2 > 1, build level-3 on level-2:
+    * r3 = b2, b3 = ceil(r3 / fo).
+
+- Repeat until some level t has bt = 1.
+    * That single block is the top index level.
+
+Height (number of index levels): t = ceil( log_fo ( r1 ) )
+Intuition: Each level reduces entries by a factor of fo.
+
+4) How to search
+- Read the top level (1 block). Binary search within the block (CPU work).
+- Follow the pointer to the matching block in level t-1; read it.
+- Repeat down the levels until we reach a level-1 index block.
+- Use its pointer to fetch the target data block (the record or the block containing it).
+
+I/O cost (index only): about t = ceil(log_fo(r1)) block reads.
+Total I/O cost: t (index) + 1 (data block).
+

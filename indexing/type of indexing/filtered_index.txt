@@ -1,0 +1,33 @@
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+-- It not support in mysql because mysql can't support where in create index.
+-- it support by PostgreSQL and MariaDB.
+
+1. What is a Filtered Index?
+-> A Filtered Index (also called Partial Index) is a type of index that includes only a subset of rows in a table, based
+on a condition (a filter predicate).
+
+Normally, an index covers all rows of the table. With a filtered index, we can tell the database:
+    "Only index the rows that match this condition."
+
+Q : Why use a filtered index?
+- Smaller index size → since only part of the data is indexed.
+- Better performance → faster lookups for specific queries.
+- Less maintenance → fewer updates during INSERT/UPDATE/DELETE operations compared to a full index.
+- Good for sparse data → when a column has many NULL values or only a few distinct values are queried often.
+
+
+Q : How to create a Filtered Index in MySQL?
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    status VARCHAR(20) -- e.g., 'active', 'inactive'
+);
+
+-- Add a generated column (1 if active, 0 otherwise)
+ALTER TABLE employees
+ADD is_active TINYINT AS (status = 'active') STORED;
+
+-- Create an index on the generated column (no WHERE allowed in MySQL)
+CREATE INDEX idx_active_employees ON employees(is_active);
+

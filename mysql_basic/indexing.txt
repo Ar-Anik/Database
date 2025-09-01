@@ -1,0 +1,104 @@
+-> Link : https://www.w3schools.com/MySQL/mysql_create_index.asp
+-> In MySQL, an index is used to speed up data retrieval from a table.
+-> Indexes improve SELECT performance but slow down INSERT, UPDATE, DELETE because the index also needs updating.
+-> Use indexes on columns used in WHERE, JOIN, ORDER BY, GROUP BY clauses.
+
+# Syntax
+CREATE [UNIQUE|FULLTEXT|SPATIAL] INDEX index_name
+ON table_name (column_1 [ASC|DESC], column_2 [ASC|DESC], ....)
+
+Here,
+> UNIQUE : Ensures that all values in the index are unique.
+
+> FULLTEXT : Unlike a normal index (which indexes exact values), a FULLTEXT index:
+    1. Tokenizes (splits) the text into words (based on spaces, punctuation, stopwords, etc.).
+        "My name is Aubdur Rob Anik" → ["My", "name", "is", "Aubdur", "Rob", "Anik"]
+    2. Stores these words in an inverted index (like a dictionary → tells where each word occurs).
+        "My"    → row 1
+        "name"  → row 1
+        "is"    → row 1
+        "Aubdur"→ row 1
+        "Rob"   → row 1
+        "Anik"  → row 1
+    3. When we search with MATCH(...) AGAINST('anik'), MySQL looks for the word "Anik" in that dictionary
+       and returns rows containing it.
+    4. It also calculates a relevance score (based on word frequency, rarity, and length of text) and sorts
+       results by best match.
+
+> SPATIAL : A SPATIAL index in MySQL is a special type of index designed for geometric (GIS) data — like
+points, lines, and polygons. It lets us efficiently query locations, distances, and regions in a table without
+scanning every row.
+
+> ASC/DESC : optional, ascending or descending order.
+
+
+# When we declare a column as PRIMARY or UNIQUE in MySQL, the database automatically creates a PRIMARY or UNIQUE
+index on that column. suppose my query,
+CREATE TABLE employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(100) UNIQUE
+);
+MySQL automatically creates a UNIQUE index on the email column. We don’t need to manually write CREATE UNIQUE
+INDEX — it’s already done.
+
+
+# Suppose i have a table,
+CREATE TABLE students (
+    id INT PRIMARY KEY,
+    roll INT UNIQUE
+);
+
+Here we have:
+    * id → PRIMARY KEY
+    * roll → UNIQUE
+
+So, When we execute this table, MySQL creates two separate indexes automatically:
+1. Primary Key Index on (id)
+    * Every primary key column gets its own index.
+    * Enforces uniqueness of id.
+    * Also acts as the clustered index in InnoDB.
+
+2. Unique Index on (roll)
+    * Ensures roll is unique.
+    * Created separately from the primary key index.
+
+> If we Want a 2-Column Index then we must explicitly create it ourself:
+    CREATE UNIQUE INDEX idx_id_roll
+    ON students (id, roll);
+
+
+# Suppose i have a table :
+CREATE TABLE `employees` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+  `name` varchar(100) DEFAULT NULL,
+  `department_id` int,
+  `email` varchar(40) unique,
+  `salary` int DEFAULT NULL
+);
+
+-> After create table if we see,
+     show index from employees;
+we can see that two index one for primary key and one for unique key.
+
+# Simple index
+create index idx_emp on employees (name);
+
+# multiple columns index
+create index idx_emp_multi on employees (name, email);
+create index idx_emp on employees (name, department_id);
+
+# unique index
+create unique index idx_email on employees (email);   -> it automatically created previously
+
+# checking index
+show index from employees;
+
+# dropping an index
+drop index idx_email on employees;
+
+-> An index always belongs to a table. A table always belongs to a database (schema). Therefore, the
+index is stored inside the same database as the table.
+
+-> Indexes are created in the same database where the table exists. Indexes cannot exist independently —
+they are always linked to a table. Dropping a table automatically drops its indexes.
+

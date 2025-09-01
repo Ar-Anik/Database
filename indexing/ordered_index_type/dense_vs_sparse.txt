@@ -1,0 +1,43 @@
+1. Searching in a Dense Index
+- A dense index has an entry for every record.
+- Searching is like a binary search on the index file.
+- Once the index is found, we directly jump to the record in the data file.
+
+-> Time Complexity:
+- Searching index: O(log₂ N) (binary search on index, where N = number of records).
+- Fetch record: O(1) (direct pointer).
+
+So, Total = O(log₂ N) + O(1) ≈ O(log₂ N)
+
+
+2. Searching in a Sparse Index
+- A sparse index has entries only for some records (block anchors).
+- Searching happens in two steps:
+    * Do a binary search on the sparse index entries.
+    * Jump to the corresponding block.
+    * Do a linear scan inside that block to find the record.
+
+-> Time Complexity:
+- Searching sparse index: O(log₂ M), where M = number of index entries (much smaller than N).
+- Scanning inside block: O(B), where B = number of records per block.
+
+So, Total = O(log₂ M) + O(B)
+
+
+
+4. Example
+Suppose:
+- Table has 1000000 records (N = 1M).
+- Each block stores 100 records (B = 100).
+- Sparse index has 1 entry per block → M = N / B = 10,000 entries.
+
+> Dense Index:
+- Binary search on 1M entries → ≈ 20 steps. then Direct fetch.
+
+> Sparse Index:
+- Binary search on 10,000 entries → ≈ 14 steps.
+- Then linear scan inside block (≤ 100 steps).
+- Worst-case = 14 + 100 = 114 steps.
+
+So, Dense index is faster (20 steps vs 114 steps).
+

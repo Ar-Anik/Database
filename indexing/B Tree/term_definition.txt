@@ -1,0 +1,68 @@
+-> A B-Tree is a balanced search tree used in databases and filesystems. Unlike a binary search tree, each node
+can store multiple keys and multiple pointers. The main goal: reduce disk I/O by grouping keys into blocks (nodes)
+that fit in one disk page.
+
+-> If a B-Tree has order m:
+    * Each node can have at most m - 1 keys.
+    * Each node can have at most m pointers (children).
+# Example:
+    * Order = 3 → max 2 keys, max 3 pointers.
+    * Order = 4 → max 3 keys, max 4 pointers.
+
+
+-> Pointers in B-Tree
+1. Block Pointer (Child Pointer)
+A block pointer points to another B-Tree node (child block). They maintain the tree structure. Every internal
+node (non-leaf) uses block pointers to decide which child node to follow.
+
+# Example:
+Root node: | P0 | 20 | P1 | 40 | P2 |
+Here, Keys = 20, 40
+Block pointers:
+    * P0 → points to child node with keys < 20
+    * P1 → points to child node with keys 20–40
+    * P2 → points to child node with keys > 40
+
+
+Q : What is Dynamic Multi-Level Index?
+-> A Dynamic Multi-Level Index is an indexing technique where:
+    * Index is built in multiple levels (like a hierarchy).
+    * It grows or shrinks dynamically as new records are inserted or deleted.
+It is often implemented using B-Trees or B+ Trees.
+
+Q : Why index is Multi-Level?
+-> If we have huge data, a single-level index becomes too large to fit in memory. So we build indexes on indexes:
+    * Level 1 (Outer index): Index of index blocks.
+    * Level 2 (Inner index): Index of actual data blocks.
+    * Level 3 (Leaf level): Pointers to actual records.
+This reduces search time significantly (logarithmic instead of linear).
+
+Q : Why Dynamic Indexing?
+-> Unlike static multi-level indexing, which is fixed after creation, dynamic indexing automatically adjusts:
+    * When we insert new records → tree splits and grows.
+    * When we delete records → tree merges and shrinks.
+That’s why B-Trees/B+ Trees are called dynamic multi-level indexes.
+
+# Example
+Suppose we have a table of Student Records with millions of entries.
+1. Level 1 (Root / Outer Index)
+Keys: [20, 40]
+Pointers: P0, P1, P2
+
+2. Level 2 (Child Nodes / Inner Index)
+P0 → handles records < 20
+P1 → handles records 20–40
+P2 → handles records > 40
+
+3. Level 3 (Leaf Nodes with Record Pointers)
+Contain actual keys and record pointers:
+| 10 → Record(Alice) | 20 → Record(Bob) |
+| 30 → Record(Charlie) | 40 → Record(David) |
+
+# Search Process (Dynamic Multi-Level Index)
+To search for StudentID = 30:
+1. Start at root index → check key 20 and 40.
+    * 20 < 30 < 40 → go to P1.
+2. At child node → contains keys [20, 30, 40].
+    * Found 30.
+Follow record pointer → fetch Charlie’s full row.

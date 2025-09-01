@@ -1,0 +1,17 @@
+1. Physical Order
+- Physical order means how data rows are actually stored on disk (hard drive / SSD).
+- It is the real arrangement of records inside data blocks/pages.
+
+Example: If we have a clustered index on StudentID, then the rows on disk are written in ascending order of StudentID.
+So in Clustered Index, the physical order of rows on disk = index order.
+
+2. Logical Order
+- Logical order means the sequence in which rows appear when accessed through an index.
+- The index provides a logical sequence (like a sorted list), but the actual data might be scattered across the disk.
+
+Example: In a Non-Clustered Index, rows are not stored physically in order; instead, the index maintains a logical
+order with pointers to the actual rows.
+
+So in Non-Clustered Index, the logical order (index) ≠ physical order (data storage).
+
+

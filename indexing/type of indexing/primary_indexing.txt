@@ -1,0 +1,24 @@
+Link : https://www.geeksforgeeks.org/dbms/primary-indexing-in-databases/
+
+-> Primary Index হলো এমন এক ধরনের index যা data file–এর primary key এর ওপর তৈরি হয়। এটি সবসময় ordered (ASC or DESC)
+data file–এর ওপর ভিত্তি করে তৈরি হয়। প্রতিটি index entry–তে থাকে:
+    - Primary Key (search key)
+    - Block Pointer (যে data block–এ ওই key–এর record আছে তার ঠিকানা)
+
+-> Primary Index সবসময় Sparse Index হয়। Search key (primary key)–এর মান দিয়ে index file–এ binary search করা হয়।
+Average block access ≈ log₂(N + 1).
+
+- log₂(N) অংশ
+এখানে N = index blocks সংখ্যা। Index structure (যেমন B+ Tree)–এ binary search/tree traversal করতে গড়ে log₂(N) ব্লক access লাগে।
+
+- +1 অংশ
+Index block থেকে pointer পাওয়ার পর আসল data block (যেটাতে record আছে) disk থেকে আনতে হয়। এই অতিরিক্ত disk access–টাই সূত্রে +1 দিয়ে বোঝানো হয়েছে।
+
+-> Features
+- Ordered data file–এর ওপর তৈরি হয়।
+- Always Sparse Index।
+- Index entry সংখ্যা = Data file–এর block সংখ্যা।
+- Storage কম লাগে।
+
+
+-> When we define a primary key on a table column (or combination of columns), the database automatically creates a primary index for that key.

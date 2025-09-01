@@ -1,0 +1,80 @@
+Link : https://medium.com/@akashsdas_dev/b-trees-and-b-trees-682d363df1f7
+
+-> B-Trees and B+ Trees are both self-balancing, multi-way search trees, designed for efficient data storage and
+retrieval, particularly in databases and file systems where disk I/O is a concern. The key differences lie in their
+structure, data placement, and query efficiency.
+
+1. Data Storage
+B Tree : Keys and associated data (records) can be stored in both internal nodes and leaf nodes.
+B+ Tree:  Data (records) are stored only in leaf nodes; internal nodes contain only keys and pointers to child nodes.
+
+2. Leaf Node Structure
+B Tree: Leaf nodes are not linked; they are independent.
+B+ Tree: Leaf nodes are linked together in a sequential linked list, enabling efficient range queries and sequential access.
+
+3. Internal Node Content
+B Tree: Internal nodes store keys, data, and pointers to children.
+B+ Tree: Internal nodes store only keys and pointers; no data, which allows for more keys per node and potentially fewer levels.
+
+4. Search Operation
+B Tree: Search can terminate at an internal node if the key is found there.
+B+ Tree: All searches must traverse to the leaf nodes, as that's where data resides.
+
+5. Efficiency for Range Queries
+B Tree: Less efficient for range scans, as it requires backtracking up the tree.
+B+ Tree: Highly efficient for range queries due to the linked leaf nodes, allowing sequential traversal without revisiting internal nodes.
+
+6. Disk I/O and Storage
+B Tree: May require more disk space per node due to data in internal nodes, potentially leading to more I/O operations.
+B+ Tree: More efficient disk usage since internal nodes are smaller (no data), reducing I/O for large datasets.
+
+7. Common Use Cases
+B Tree: General-purpose indexing where data can be accessed quickly in internal nodes.
+B+ Tree: Preferred in databases (e.g., for indexes) and file systems due to better support for sequential and range operations.
+
+
+-> Difference Between B and B+ Tree in Root, Internal and Leaf Node Structure.
+1. Root Node
+>> B Tree : [ BP0 | (k1, P1) | BP1 | (k2, P2) | BP2 | ... ]
+- Stores keys (K), row pointers (P), and block pointers (BP).
+- If the tree is very small (only root exists), the root also acts as a leaf node with (K,P) pairs only.
+- Data (row pointers) can exist in root.
+
+>> B+ Tree : [ BP0 | k1 | BP1 | k2 | BP2 | ... ]
+- Stores only keys (K) and block pointers (BP).
+- No row pointers (P) inside root.
+- Root acts only as an index node.
+- If the tree has only one node (root = leaf), then it will contain (K,P) pairs.
+
+2. Internal Nodes
+>> B Tree : [ BP0 | (k1, P1) | BP1 | (k2, P2) | BP2 | ... ]
+- Internal nodes contain:
+   * Keys (K)
+   * Row pointers (P) → direct links to actual records
+   * Block pointers (BP) → links to child nodes
+- Searching can end in internal nodes, since row pointers are available there.
+
+>> B+ Tree : [ BP0 | k1 | BP1 | k2 | BP2 | ... ]
+- Internal nodes contain:
+  * Keys (K)
+  * Block pointers (BP) only
+  * No row pointers inside internal nodes.
+- Searching never ends here, must continue to leaf nodes.
+- Internal nodes are purely for navigation (indexing).
+
+3. Leaf Nodes
+>> B Tree : [ (k1, P1) | (k2, P2) | (k3, P3) | ... ]
+- Leaf nodes contain:
+  * Keys (K)
+  * Row pointers (P) → point to actual records
+  * Here BP(Block Pointer) Point NULL. So BP Not Show.
+- No block pointers (BP), since leaves have no children(BP Point NULL)
+- Leaf nodes are not linked to each other.
+
+>> B+ Tree : [ (k1, P1) | (k2, P2) | (k3, P3) | NLP ] ---> [ next leaf ... ]
+- Leaf nodes contain:
+  * Keys (K)
+  * Row pointers (P) → actual records
+  * Next Leaf Pointer (NLP) → points to the next leaf node (like a linked list)
+- This linked leaf structure supports fast range queries.
+- All data records are found only in leaves.

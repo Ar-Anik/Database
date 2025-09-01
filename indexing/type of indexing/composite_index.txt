@@ -1,0 +1,91 @@
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+1. What is a Composite Index?
+-> A composite index (also called a multi-column index) is an index that is created on two or more columns of a table.
+It helps the database search faster when queries involve multiple columns in the WHERE, JOIN, ORDER BY, or GROUP BY clauses.
+
+Instead of creating separate indexes on each column, a composite index allows MySQL to use a single index for lookups involving multiple columns.
+
+# Example:
+Suppose we have a table of employees with columns: (id, first_name, last_name, department_id, salary)
+
+> If we often run queries like:
+SELECT * FROM employees
+WHERE department_id = 10 AND salary > 50000;
+
+- Then creating a composite index on (department_id, salary) can make these queries run much faster.
+
+Q : How to Create a Composite Index in MySQL
+> Creating Composite Index while Creating Table
+create table employees (
+  id int primary key,
+  first_name varchar(50),
+  last_name varchar(50),
+  department_id int,
+  salary decimal(10, 2),
+  INDEX idx_dept_salary (department_id, salary)
+);
+
+> Add Composite Index to Existing Table (ALTER TABLE)
+ALTER TABLE employees ADD INDEX idx_dept_salary (department_id, salary);
+
+> Using CREATE INDEX
+CREATE INDEX idx_dept_salary ON employees(department_id, salary);
+
+
+-> Suppose we create a 3-column composite index:
+    CREATE INDEX idx_fullname ON employees(first_name, middle_name, last_name);
+
+That index has an order: (first_name → middle_name → last_name)
+- So the index is physically sorted first by first_name,
+- then inside each first_name group, sorted by middle_name,
+- then inside each (first_name, middle_name) group, sorted by last_name.
+
+
+-> The Leftmost Prefix Rule
+MySQL can only use the composite index if our query’s WHERE condition matches the columns starting from the leftmost part of the index.
+shortly say, in MySQL (InnoDB / B-Tree Indexes) Leftmost prefix rule applies.
+
+That means, Index will be used for:
+1. Queries on first_name only
+    - WHERE first_name = 'aubdur'
+
+2. Queries on first_name + middle_name
+    - WHERE first_name = 'aubdur' AND middle_name = 'rob'
+
+3. Queries on first_name + middle_name + last_name
+    - WHERE first_name = 'aubdur' AND middle_name = 'rob' AND last_name = 'anik'
+
+4. Queries on first_name + last_name (skipping only the last column, not the middle one, is allowed in equality filters in some cases if
+MySQL can still use the prefix part).
+    - WHERE first_name = 'aubdur' AND last_name = 'anik'
+
+MySQL will use the index for first_name, but the filtering on last_name may require extra work after finding the matching first_name.
+
+
+-> Index will NOT be used for:
+1. Queries on middle_name only
+    - WHERE middle_name = 'rob'
+
+2. Queries on last_name only
+    - WHERE last_name = 'anik'
+
+3. Queries on middle_name + last_name (without first_name)
+    - WHERE middle_name = 'rob' AND last_name = 'anik'
+
+Because we skipped the leftmost column (first_name), MySQL cannot jump directly into the index.
+
+
+-> Summary Table
+-----------------------------------------------------------------------------------------------------------------------------------------
+| Query condition                                                    | Index used?                                                      |
+|------------------------------------------------------------------- | -----------------------------------------------------------------|
+| `WHERE first_name = ...`                                           | ✅ Yes                                                           |
+| `WHERE first_name = ... AND middle_name = ...`                     | ✅ Yes                                                           |
+| `WHERE first_name = ... AND middle_name = ... AND last_name = ...` | ✅ Yes                                                           |
+| `WHERE first_name = ... AND last_name = ...`                       | ✅ Partially (uses index for `first_name`, scans for last\_name) |
+| `WHERE middle_name = ...`                                          | ❌ No                                                            |
+| `WHERE last_name = ...`                                            | ❌ No                                                            |
+| `WHERE middle_name = ... AND last_name = ...`                      | ❌ No                                                            |
+-----------------------------------------------------------------------------------------------------------------------------------------
+

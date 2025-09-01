@@ -1,0 +1,63 @@
+1. Page (Data Page)
+  * In databases, data isn’t stored row by row directly.
+  * It’s stored in chunks of fixed size (like 4 KB, 8 KB, 16 KB depending on DB).
+  * Each chunk = page.
+  * A page can hold multiple rows.
+Think of a page like a sheet of paper in a big book, where many rows (sentences) are written.
+
+2. Block
+  * Block = synonym of page (but depends on context).
+  * In disk storage: a block is the smallest unit of data storage (like 4 KB).
+  * In database memory (buffer pool): a page is the in-memory representation of that block.
+
+On disk → blocks
+In memory → pages
+
+Q : What is Disk Storage?
+-> A permanent data storage device that keeps data even when the power is off. like : HDD, SSD.
+In databases, "disk storage" = the place where our tables, indexes, and logs live permanently.
+
+3. Disk I/O (Input/Output Operation)
+> Meaning of I/O
+I/O = Input/Output. It refers to any communication between computer and the outside world (peripherals).
+In the context of databases:
+    * “Outside world” = disk (storage device)
+    * CPU & RAM = inside world
+So, when the database reads/writes data from/to hard disk (HDD/SSD), that’s called a Disk I/O operation.
+
+> Why is Disk I/O slow?
+    * CPU speed: nanoseconds (10⁻⁹ seconds).
+    * RAM access: microseconds (10⁻⁶ seconds).
+    * Disk access: milliseconds (10⁻³ seconds).
+That’s a 1,000× to 100,000× gap!
+
+> The Role of RAM
+When a query runs, Database checks if the required page is already in RAM (buffer pool/cache).
+    * If yes → no I/O needed (super fast).
+    * If no → it must fetch from disk → Disk I/O (slow).
+
+> Why Not Read Directly from Disk Every Time?
+Because disk is slow:
+    * HDD (mechanical) → seek time + rotation delay + transfer.
+    * SSD (faster) → still slower than RAM due to bus & NAND latency.
+That’s why databases always try to minimize disk access and keep frequently used pages in RAM.
+
+> How Index Helps Reduce I/O
+Without index:
+    * DB might need to scan every page → multiple I/Os.
+With index:
+    * DB uses index tree → jumps directly to the exact page.
+    * Fewer disk reads = fewer I/Os.
+
+
+4. Selectivity
+- How unique the indexed column is.
+- High selectivity = values are mostly unique → good for indexing (like roll, email).
+- Low selectivity = many duplicates → index less useful (like gender).
+
+
+5. Cardinality
+- The number of distinct values in a column.
+- High cardinality = good for indexes (lots of unique values).
+- Low cardinality = not so good.
+

@@ -1,0 +1,148 @@
+Q : Insert the following keys into B+ Tree, if order of B+ Tree = 3. keys = [6, 2, 4, 15, 18, 8, 27, 9, 10, 13]
+
+- Rules of B+ Tree (order = m = 3)
+1. Max children per internal node = m = 3
+→ Max keys = m – 1 = 2
+
+2. Min children (except root) = ⌈m/2⌉ = 2
+→ Min keys = ⌈m/2⌉ – 1 = 1
+
+3. Leaf nodes:
+    * Can hold at most m – 1 = 2 keys.
+    * Must hold at least ⌈m/2⌉ – 1 = 1 key.
+    * Linked sequentially for range queries.
+
+4. Overflow condition:
+→ Leaf overflow → when inserting causes > 2 keys.
+→ Internal overflow → when inserting causes > 2 keys (3 children).
+
+5. Splitting:
+→ Leaf node split: Split into 2 leaves (⌈(n+1)/2⌉ in left, rest in right). Promote first key of right node to parent.
+→ Internal node split: Promote middle key upward, left child = left side, right child = right side.(In this case)
+
+- Even vs Odd Case in Internal Splits
+Case 1: Odd number of keys (e.g., 3, 5, 7 …)
+    - Easy: middle key is unique.
+    - Example: [2, 4, 6] → promote 4.
+    - Left = [2], Right = [6].
+
+Case 2: Even number of keys (e.g., 2, 4, 6 …)
+    - Pick the ⌈n/2⌉-th key as the promoted key.
+    - Left side = keys before promoted key.
+    - Right side = keys after promoted key.
+
+6. Root split:
+Splitting mechanism is the same for internal and root node.
+If root overflows → split root → new root is created with promoted key.
+
+
+# Step-by-Step Insertion
+1. Insert 6
+- Tree empty → 6 goes into root (leaf).
+- root : [6]
+
+2. Insert 2
+- Insert → [2,6] (leaf can hold max 2 keys).
+- root : [2,6]
+
+3. Insert 4
+- Now → [2,4,6] → overflow (3 keys > 2).
+- Split: ⌈(3+1)/2⌉ = 2, so 4 will be the new root and Left [2], Right [4,6].
+- Promote first key of right (4) to root.
+
+              [4]           ← root (internal)
+             /   \
+         [2]     [4,6]
+
+4. Insert 15
+- Go right → [4,6,15] → overflow.
+- Split → Left [4], Right [6,15]. Promote first key of right = 6.
+- Root [4] becomes [4,6] with 3 children.
+
+               [4,6]
+             /   |    \
+         [2]   [4]   [6,15]
+
+5. Insert 18
+- Goes into last leaf [6,15] → [6,15,18] → overflow.
+- Split → [6] and [15,18]. Promote first key of right = 15.
+- Root [4,6] → [4,6,15] → overflow (3 keys > 2).
+- Root Split:
+    * Middle key = 6 promoted.
+    * New root = [6]
+    * Children: left [4], right [15]. Because, Internal nodes never duplicate promoted key.
+
+                  [6]
+               /      \
+           [4]         [15]
+          /   \       /    \
+        [2] [4]   [6]  [15,18]
+
+6. Insert 8
+- Goes to right subtree [15] → left child [6].
+- Leaf [6] → [6,8].
+- No overflow.
+
+                  [6]
+               /      \
+           [4]         [15]
+          /   \       /    \
+        [2] [4]   [6,8]  [15,18]
+
+7. Insert 27
+- Goes to [15] rightmost → [15,18,27] → overflow.
+- Split → [15] and [18,27]. Promote first key of right = 18.
+- Internal [15] → [15,18].
+
+                  [6]
+               /      \
+           [4]         [15,18]
+          /   \       /    |    \
+        [2] [4]  [6,8] [15] [18,27]
+
+8. Insert 9
+- Goes to [6,8] → [6,8,9] → overflow.
+- Split → [6] and [8,9]. Promote 8.
+- Internal [15,18] becomes [8,15,18] → overflow (3 keys).
+
+- Split [8,15,18] → promote 15.
+- Now root [6] → [6,15].
+
+                   [6,15]
+                 /    |     \
+              [4]    [8]    [18]
+            /   \   /   \   /   \
+          [2] [4] [6] [8,9] [15] [18,27]
+
+9. Insert 10
+- Goes under [8] → [8,9] → [8,9,10] → overflow.
+- Split → [8], [9,10]. Promote 9.
+- Internal [8] becomes [8,9].
+
+                   [6,15]
+                 /    |     \
+              [4]    [8,9]    [18]
+            /   |   /   | \      |    \
+          [2] [4] [6] [8] [9,10] [15] [18,27]
+
+10. Insert 13
+- Goes under [8,9] → into [9,10] → [9,10,13] → overflow.
+- Split → [9], [10,13]. Promote 10.
+- Internal [8,9] becomes [8,9,10] → overflow.
+
+- Split [8,9,10] → left [8], right [10]. Promote 9.
+- Root [6,15] becomes [6,9,15] → overflow.
+
+- Split root → promote 9.
+- New root = [9].
+- Children: [6], [15].
+
+Final Tree :
+                        [9]
+                     /      \
+                [6]          [15]
+               /   \       /    \
+           [4]    [8]     [10]    [18]
+          /  \   /  \     /  \       |   \
+        [2] [4] [6] [8]  [9] [10,13] [15] [18,27]
+

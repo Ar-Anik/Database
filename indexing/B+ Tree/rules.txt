@@ -1,0 +1,63 @@
+1. Order (m) of B+ Tree
+- m = maximum number of children an internal node can have.
+- Each node can have at most m children.
+- Each node can have at most m – 1 keys.
+
+2. Root Node Rules
+- If the tree is empty, the root is also a leaf.
+- If the root is internal (not a leaf). It must have at least 2 children.
+- Maximum children = m, maximum keys = m – 1.
+
+3. Internal Node Rules
+- Each internal node contains keys and child pointers: p0 | k1 | p1 | k2 | p2 | ... | km-1 | pm-1
+where:
+    * ki = separator keys
+    * pi = pointers to children nodes
+
+- Ordering rule:
+    * p0 < k1
+    * k1 ≤ p1 < k2
+    * k2 ≤ p2 < k3
+      ...
+    * km-1 ≤ pm-1
+
+- Internal node capacity:
+    * Minimum children: ⌈m/2⌉
+    * Maximum children: m
+    * Minimum keys: ⌈m/2⌉ – 1
+    * Maximum keys: m – 1
+
+- No repeated keys in internal nodes (keys only appear once as separators).
+
+4. Leaf Node Rules
+- All keys are stored in leaf nodes (not internal nodes).
+- Keys in each leaf are in sorted order.
+- Leaf node capacity:
+    * Minimum keys: ⌈m/2⌉ – 1
+    * Maximum keys: m – 1
+- Leaf nodes contain:
+    * Key + Record pointer (or actual data pointer).
+    * A block pointer to the next leaf node (→) to support range queries.
+- All leaf nodes are at the same level.
+- Leaf nodes can have duplicate keys.
+- Leaf nodes are linked from left to right → enabling fast, in-order traversal.
+
+5. Search Rules
+- Start at root.
+- Compare key with internal node keys.
+- Follow correct pointer pi using ordering rule:
+    if key < k1 → go p0
+    if k1 ≤ key < k2 → go p1
+    if k2 ≤ key < k3 → go p2
+    ...
+    else → go pm-1
+- Repeat until reaching a leaf node.
+- If found in leaf → return record pointer.
+- If not found in leaf → key does not exist.
+
+8. Range Query Rules
+- Start at first leaf node containing lower bound(here 20).
+- Follow leaf block pointers (→) sequentially.
+- Collect keys until upper bound is reached.
+- Efficient for queries like: SELECT * FROM table WHERE key BETWEEN 20 AND 100;
+

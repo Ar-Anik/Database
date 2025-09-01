@@ -1,0 +1,152 @@
+Link : https://medium.com/@hiteshvats007/how-do-indexes-work-internally-in-a-database-system-2ebc0d5f9a6d
+Link : https://www.atlassian.com/data/databases/how-does-indexing-work
+
+Q : ইনডেক্স কী?
+-> ডাটাবেজে ইনডেক্স হলো একটা বিশেষ তালিকা বা সূচিপত্র, যেটা ডাটাকে দ্রুত খুঁজে পেতে সাহায্য করে।
+* যখন কোনো কলামের উপর ইনডেক্স বানানো হয় (যেমন id বা name), তখন সেই কলামের মান আলাদা করে জমা রাখা হয়।
+* প্রতিটি মানের সাথে একটা ঠিকানা (pointer) রাখা হয়, যেটা বলে দেয় আসল টেবিলে সেই ডাটা কোথায় আছে।
+* ইনডেক্স সাধারণত B-tree নামে এক ধরনের ট্রি স্ট্রাকচার ব্যবহার করে।
+
+-> একে বইয়ের সূচিপত্রের (index page) মতো ধরতে পারেন — যেখানে কোন শব্দ/বিষয় কোন পাতায় আছে, সেটা লেখা থাকে। এতে পুরো বই পড়তে হয়
+না, সরাসরি পাতায় চলে যাওয়া যায়।
+
+Q : index-এর ভেতরের Key & Pointer আসলে কী বোঝায়?
+
+1. Key (ইনডেক্স কী)
+-> যখন কোনো কলামের উপর ইনডেক্স তৈরি হয় (যেমন id), তখন সেই কলামের মানগুলো key আকারে ইনডেক্স টেবিলে সংরক্ষণ করা হয়।
+অর্থাৎ, যদি id কলামে ইনডেক্স থাকে, তাহলে main table-এর id মানটাই index key হিসেবে থাকবে।
+
+2. Pointer
+-> Key-এর সাথে সাথে একটা পয়েন্টার রাখা হয়, যা সরাসরি main table-এর সেই রো (row) বা ডাটার অবস্থান (page/slot number) এর দিকে
+নির্দেশ করে। এটাকে row locator বলা হয়।
+
+-> প্রতিবার যখন কোনো কুয়েরি চালানো হয়, তখন ডাটাবেজ ইঞ্জিন প্রথমেই শুরু করে কুয়েরি অপ্টিমাইজেশন। এই প্রক্রিয়ায় মূলত করা হয়:
+    1. কুয়েরিটি বিশ্লেষণ করা।
+    2. টেবিলের ডাটার আকার বিবেচনা করা।
+    3. টেবিলে থাকা কোনো ইনডেক্স আছে কিনা দেখা।
+    4. কিছু internal statistics tables বিশ্লেষণ করা : ডাটাবেজ ইঞ্জিনের নিজের কিছু অভ্যন্তরীণ টেবিল/ডাটা থাকে যা টেবিলের উপর বিভিন্ন
+    পরিসংখ্যান (statistics) সংরক্ষণ করে। যেমন:
+        * টেবিলের মোট রো সংখ্যা (number of rows)
+        * প্রতিটি কলামে ভিন্ন ভিন্ন মানের সংখ্যা (distinct values per column)
+        * কোন কলামে NULL মানের সংখ্যা
+        * ডাটার বণ্টন (data distribution) বা ফ্রিকোয়েন্সি
+    ডাটাবেজ অপ্টিমাইজার এই তথ্য ব্যবহার করে কুয়েরি চালানোর জন্য সবচেয়ে ভালো পথ নির্ধারণ করে।
+
+এই সমস্ত তথ্যের ভিত্তিতে ডাটাবেজ ইঞ্জিন সিদ্ধান্ত নেয়—
+    * ফুল টেবিল স্ক্যান (Full Table Scan) চালানো হবে কি না,
+    * বিটম্যাপ স্ক্যান (Bitmap Scan) ব্যবহার করা হবে কি না,
+    * নাকি ইনডেক্স স্ক্যান (Index Scan) করা হবে।
+
+সহজভাবে বললে, ডাটাবেজ প্রথমে দেখে কোন পদ্ধতিতে কুয়েরি দ্রুততম ও সবচেয়ে কার্যকরভাবে চালানো যাবে।
+
+-> Searching with Index
+
+> 1. DBMS Software Layer (SQL Engine)
+we type our query: SELECT * FROM employees WHERE employee_id = 105;
+The DBMS query engine receives it. The parser checks syntax, and the optimizer decides the best plan:
+- Option 1: Scan the whole table (full table scan).
+- Option 2: Use an index if available.
+Since employee_id has an index, the optimizer chooses the index path.
+
+--> The DBMS maintains metadata about tables and indexes in its system catalog. These statistics are what the query
+optimizer uses to decide whether to use an index or a full scan.
+
+Q : What Statistics Typically Include
+1. Row Count (Cardinality)
+    - How many rows exist in the table.
+    - Example: employees has 1,000,000 rows.
+
+2. Page Count
+    - How many data pages store the table.
+    - How many index pages exist for each index.
+
+3. Column Distribution (Histograms)
+    - Value ranges and frequencies.
+    - Example: employee_id values range 1 → 1,000,000.
+    - DBMS may know that most employee_id values are uniformly distributed, or that salary has skewed values.
+
+4. Distinct Values (NDV = Number of Distinct Values)
+    - How many unique values a column has.
+    - Example: department_id has 12 unique values.
+
+5. Null Counts
+    - How many rows contain NULL in a column.
+
+6. Index Information
+    - Which indexes exist on the table.
+    - What columns each index covers.
+    - The B+ Tree height (levels root → leaf).
+    - The clustering factor (how closely the index order matches table order).
+
+7. Selectivity
+    - How selective a column is (likelihood of reducing rows).
+    - Example: Searching employee_id is very selective (1 row), searching gender is not (50/50).
+
+# How it decides:
+- Statistics: DBMS knows how many rows, how data is distributed, how many pages in the table/index.
+- Cost estimation: It estimates I/O cost:
+    * Using index → fewer pages to read.
+    * Full scan → more pages to read.
+- Index availability: Only chooses a B+ Tree index if it exists on the column.
+
+Decision happens in CPU, using metadata stored in RAM or system catalog tables. DBMS never searches disk yet;
+it just decides which index or plan will likely be faster.
+
+> 2. CPU & Process Execution
+- The query plan is executed as a program by the DBMS process (running on CPU).
+- CPU works with instructions and memory addresses.
+- The DBMS process makes system calls to the OS to fetch pages (blocks) from disk into RAM if not already cached.
+- The CPU itself doesn’t talk to disk; it gives instructions to the OS + disk controller.
+
+> 3. RAM (Buffer Pool / Cache)
+- DBMS uses a Buffer Pool (in RAM) to avoid going to disk repeatedly.
+- When the query asks for employee_id = 105:
+- DBMS checks if the index pages are already in the buffer pool.
+    * If yes: search continues in RAM (fast).
+    * If not: a disk I/O request is made to load the needed index pages into RAM.
+
+# The Role of RAM :
+Step-1: Root page (index top node)
+- The root page of every B+ Tree is always kept in RAM (pinned).
+- CPU performs binary search inside the root page (tiny).
+- Finds a pointer to the correct child page.
+
+Step-2: Internal pages (middle levels)
+- CPU asks: “Do I already have that page in buffer pool?”
+    * If cached → read directly from RAM.
+    * If not → DBMS sends request to OS → disk controller fetches that child page from disk → loads into RAM (buffer pool).
+- CPU does binary search inside that page.
+
+Step-3: Leaf page
+- Eventually CPU reaches a leaf page in the B+ Tree, and get a pointer.
+- The leaf entry looks like this:
+    105(employee_id)  →  (PageID = 874, Slot = 12)
+That means the row with employee_id = 105 is located in data page 874, inside slot 12.
+
+> 4. Check Buffer Pool for Data Page
+- The DBMS buffer manager checks if page 874 (data page) is already in the buffer pool (RAM).
+- Two possibilities:
+
+Case A: Page is Cached in RAM
+    - If page 874 is in RAM → CPU can directly read it.
+    - CPU finds slot 12 → extracts the row → query result is produced.
+    - Super fast, no disk I/O needed.
+
+Case B: Page Not Cached
+    - If page 874 is NOT in buffer pool → DBMS makes a page read request:
+    - DBMS → OS (pread() or similar system call).
+    - OS → Disk Controller (via driver).
+    - Disk Controller → Disk (SSD/HDD).
+    - Disk Controller fetches page 874 from storage → sends to RAM.
+    - OS puts it into DBMS buffer pool.
+Now CPU can access page 874 in RAM, go to slot 12, get and fetch the row.
+
+> 5. Return Row to Query Executor
+- CPU now has the row data (employee_id = 105, name = 'Alice', salary = 50000, …).
+- The row is passed from storage engine → query executor → client connection (e.g., our SQL client or app).
+
+> 6. Caching for Future Queries
+- The data page 874 stays in the buffer pool (until evicted by LRU or another replacement policy).
+- If another query asks for employee_id = 106 (which happens to be on the same page 874), no disk I/O is needed again.
+- That’s why indexes + buffer pool make queries extremely fast.
+

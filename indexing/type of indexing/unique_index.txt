@@ -1,0 +1,38 @@
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+-> A unique index is a type of database index that ensures all values in the indexed column(s) are unique.
+
+That means:
+- No two rows can have the same value in the indexed column(s).
+- If we try to insert or update a record with a duplicate value, the database will throw an error.
+
+-> Unique Index is basically like a constraint + index combined:
+- The constraint part enforces uniqueness.
+- The index part makes searching faster.
+
+Q : How Does It Work?
+When you create a unique index, the database builds a data structure (usually a B-tree) for the column(s).
+
+- Each time you insert or update, the database checks the B-tree to see if the value already exists.
+- If it does not exist, the new value is added into the tree in sorted order.
+- If it already exists, the operation fails with a duplicate key error.
+
+So, the database uses the index to both:
+    - Quickly look up values for queries (WHERE, JOIN, etc.).
+    - Enforce uniqueness at the storage level.
+
+Suppose we have a users table :
+create table users (
+    id int auto_increment primary key,
+    email varchar(100),
+    phone varchar(20)
+);
+
+create unique index idx_email on users(email);
+
+INSERT INTO users (email, phone) VALUES ('alice@example.com', '12345');
+INSERT INTO users (email, phone) VALUES ('bob@example.com', '67890');
+INSERT INTO users (email, phone) VALUES ('alice@example.com', '99999');  ❌ Fails (duplicate email)
+
+-> Unique Index on Multiple Columns
+create unique index idx_user_phone on users(email, phone);

@@ -1,0 +1,53 @@
+Link : https://reliasoftware.com/blog/types-of-indexes-in-sql
+
+-> A non-clustered index is an index in which the logical order of the index (sorted by the key) is different from
+the physical order of the data rows in the table.
+
+- Think of it as a separate structure that contains:
+    * The index key values (sorted).
+    * A pointer (address/row ID) to the actual data row in the table.
+
+
+# Key Points
+- Separate Structure
+    * A non-clustered index is stored separately from the table data.
+    * It does not change the physical order of rows in the table.
+- Multiple Allowed
+    * A table can have many non-clustered indexes (unlike clustered index, which can only be one).
+- Uses Pointers
+    * Each index entry contains the key + a pointer to the location of the full row in the table.
+    * This pointer can be:
+        - Row ID (RID) → if the table has no clustered index (heap table).
+        - Clustered key → if the table has a clustered index.
+- Performance
+    * Speeds up queries that use conditions on columns not covered by clustered index.
+    * Great for WHERE, JOIN, ORDER BY, and GROUP BY.
+    * But slower than clustered index for large range queries (because of extra lookup).
+
+
+-> Imagine a textbook: The index pages at the end of the book, which list terms alphabetically and point to
+the page numbers (pointers).
+
+
+-> In InnoDB (the default MySQL storage engine):
+    - Primary Key → always creates a clustered index automatically.
+    - Secondary indexes (any other indexes) are always non-clustered indexes.
+
+So in MySQL, whenever we create an INDEX (other than the primary key), it is non-clustered.
+
+
+-> Creating a Non-Clustered Index in MySQL
+1. While Creating a Table
+create table employees (
+    emp_id int primary key,
+    name varchar(50),
+    department varchar(50),
+    salary decimal(10, 2),
+    INDEX idx_name(name)
+);
+
+Here, employee_id → clustered index (because it’s the PRIMARY KEY). idx_name → non-clustered index on name.
+
+
+2. After Table is Created
+create index idx_department on employees(department);
