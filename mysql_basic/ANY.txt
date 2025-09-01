@@ -1,0 +1,39 @@
+Q : What is the ANY Operator in MySQL?
+-> The ANY operator is used to compare a value to any value in a subquery. ANY returns a boolean value as a result.
+It returns TRUE if at least one of the values in the subquery satisfies the condition.
+
+-> Syntax: <column_name> <operator> ANY (subquery)
+
+-> Common operators with ANY: =, !=, <, <=, >, >=
+
+# Example Meaning :
+SELECT * FROM employees
+WHERE salary > ANY (SELECT salary FROM employees WHERE department_id = 3);
+
+This means from this query we get employees whose salary is greater than at least one employee in department 3.
+
+Q : ANY (SELECT salary FROM employees WHERE department_id = 3) -> What does the ANY part do here?
+-> This subquery returns a list of salary values (only one column: salary) from employees in department 3.
+For example, if department_id = 3 has:
+salary
+65000
+70000
+
+Then ANY works like this:
+    salary > 65000 OR salary > 70000
+It checks each employee's salary to see if it's greater than at least one of those salaries.
+
+-> So final query look like after the sub-query execute :
+SELECT * FROM employees
+WHERE salary > ANY (65000, 70000);
+
+This will return all employees whose salary is greater than at least one of those values (either 65000 or 70000).
+
+-> The ANY operator in MySQL behaves like an OR condition over the values returned by the subquery.
+    value > ANY (list_of_values) ≡ value > value1 OR value > value2 OR ...
+
+-> Notes
+    * ANY needs a subquery that returns multiple values (a column).
+    * The subquery must return a single column — so it can act like a list of values.
+    * If it returns more than one column, MySQL will raise an error.
+    * If subquery returns NULL only, the condition is always false.
