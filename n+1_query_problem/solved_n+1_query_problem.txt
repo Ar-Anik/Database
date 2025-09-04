@@ -1,0 +1,39 @@
+Q : How to Solve N+1 in Raw SQL / DBMS ?
+-> The root cause of N+1 is:
+    - We fetch the main rows first.
+    - Then we run extra queries per row for related data.
+
+- The fix is: reduce multiple queries into one efficient query.
+
+# Solution-1: Use Joins
+- Instead of querying per row, bring related data with a single join.
+
+SELECT b.id, b.title, a.name AS author_name
+FROM books b
+JOIN authors a ON b.author_id = a.id;
+
+- This fetches all books and their authors in 1 query. Works for 1-to-1 and 1-to-many relations.
+
+
+# Solution-2: Use IN clause
+- If we already got IDs, fetch related data in bulk instead of per row.
+
+- (N+1) query:
+-- for each book separately
+SELECT * FROM authors WHERE id = 10;
+SELECT * FROM authors WHERE id = 11;
+SELECT * FROM authors WHERE id = 12;
+
+- single query
+SELECT * FROM authors WHERE id IN (10, 11, 12);
+
+
+# Solution-3: Use Subqueries
+- Instead of separate lookups, use subqueries.
+
+SELECT b.id, b.title, (SELECT a.name FROM authors a WHERE a.id = b.author_id) AS author_name
+FROM books b;
+
+- The DBMS optimizer often converts this into a join internally.
+
+

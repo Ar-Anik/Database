@@ -1,0 +1,45 @@
+Link : https://medium.com/databases-in-simple-words/the-n-1-database-query-problem-a-simple-explanation-and-solutions-ef11751aef8a
+
+1. What is the N+1 Query Problem?
+-> The N+1 query problem happens when our application executes one query to fetch a list of items (the “1”) and then, for
+each item, it executes another query (the “N”) to fetch related data. This means if you have N items, our code makes N
+extra queries plus the initial query → N+1 queries total.
+
+The issue: It causes unnecessary database calls, increasing latency and slowing down performance, especially when N is large.
+
+2. Example of N+1 Query Problem
+Suppose we have two tables:
+    > Author: id, name
+    > Book: id, title, author_id
+we want to list all books with their author names.
+
+Case-1: Naive approach (With N+1 Problem)
+-- First query: get all books
+SELECT * FROM books;
+
+-- Suppose it returns 3 rows:
+1 | "Book A" | author_id = 10
+2 | "Book B" | author_id = 11
+3 | "Book C" | author_id = 12
+
+-> Now for each book, we run another query:
+-- For book 1
+SELECT * FROM authors WHERE id = 10;
+
+-- For book 2
+SELECT * FROM authors WHERE id = 11;
+
+-- For book 3
+SELECT * FROM authors WHERE id = 12;
+
+That means 1 (initial) + 3 (per book) = 4 queries total. If we had 1000 books, that’s 1001 queries!
+
+Case-2: Optimized approach (solving N+1)
+-- Instead of querying per book, use a JOIN:
+
+SELECT b.id, b.title, a.name AS author_name
+FROM books b
+JOIN authors a ON b.author_id = a.id;
+
+- Just 1 query no matter how many books.
+

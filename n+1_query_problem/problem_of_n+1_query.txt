@@ -1,0 +1,25 @@
+1. Too Many Database Round-Trips
+- Instead of 1 single query, the application sends N+1 queries to the database.
+- Each query requires a network round trip + parsing + planning + execution.
+- More queries = more latency.
+
+2. Performance Degradation (Scales Poorly)
+- For small N (like 2–3 rows), it’s not noticeable.
+- For large N (hundreds or thousands), performance collapses.
+Example:
+    * If we fetch 1000 books, that means 1001 queries.
+    * Each query might be fast, but multiplied by 1000 = huge slowdown.
+
+3. Wasted Resources
+- DB server load: CPU + disk I/O wasted on repeated queries.
+- Application load: Waiting for results of each query.
+
+4. Locks & Transactions Overhead
+- If inside a transaction, every query adds overhead.
+- More queries = more chances of locks, deadlocks, and contention.
+
+5. Harder to Scale
+- With N+1, scaling horizontally (more servers) doesn’t help much because the core inefficiency is query
+count, not raw CPU.
+- Database becomes the bottleneck.
+
