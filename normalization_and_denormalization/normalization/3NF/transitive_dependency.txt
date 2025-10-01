@@ -1,0 +1,30 @@
+Q : What is Transitive dependency?
+-> A transitive dependency is a type of functional dependency in a database where a non-key attribute depends
+on another non-key attribute, which in turn depends on the primary key.
+
+-> Definition
+Suppose we have a relation R with attributes X, Y, and Z.
+- X → Z is transitively dependent if there exists an attribute Y such that:
+    * X → Y
+    * Y → Z
+    * Y is not a candidate key
+In this case, X → Z is called a transitive dependency because Z depends on X indirectly through Y.
+
+-> Transitive dependency happens when a non-key attribute depends on another non-key attribute, rather than
+depending directly on the primary key. It can cause data redundancy and update anomalies.
+
+# Example: EMP_DEPT Relation
+| Ssn | Ename | Dnumber | Dname | Dmgr_ssn |
+| --- | ----- | ------- | ----- | --------- |
+| 123 | John  | 10      | IT    | 999       |
+| 124 | Alice | 20      | HR    | 888       |
++-----+-------+---------+-------+-----------+
+
+Primary Key: Ssn
+1. Ssn → Dnumber
+2. Dnumber → Dmgr_ssn (Non-key attribute → non-key attribute)
+Therefore, Ssn → Dmgr_ssn is a transitive dependency because it depends on Ssn through Dnumber.
+
+That's Why :
+- Leads to redundant data: Dmgr_ssn is repeated for multiple employees in the same department.
+- Causes update anomalies: Changing a manager’s SSN requires updating multiple rows.

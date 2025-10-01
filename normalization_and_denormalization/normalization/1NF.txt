@@ -1,0 +1,321 @@
+Fundamentals of Database Systems Seventh Edition: 477
+
+===============================================
+          FIRST NORMAL FORM (1NF)
+===============================================
+
+Definition:
+-----------
+First Normal Form (1NF) is a rule in the relational model:
+1. Attributes must contain only atomic (indivisible) values.
+2. Each attribute value in a tuple must be a single value.
+3. Disallows:
+   - Multivalued attributes
+   - Composite attributes
+   - Nested relations (relations inside relations)
+
+-----------------------------------------------
+Example: DEPARTMENT Relation
+-----------------------------------------------
+
+Unnormalized Schema:
+DEPARTMENT(Dnumber, Dname, Manager, Dlocations)
+
+Problem: Dlocations is multivalued (one department can have many locations).
+Therefore, it is not in 1NF.
+
+Not in 1NF Table:
+
++---------+------------+---------+---------------------+
+| Dnumber | Dname      | Manager | Dlocations          |
++---------+------------+---------+---------------------+
+| 1       | Research   | Smith   | {Houston, Bellaire} |
+| 2       | Finance    | Johnson | {Chicago}           |
+| 3       | Marketing  | Adams   | {New York, Dallas}  |
++---------+------------+---------+---------------------+
+
+
+===============================================
+Two Ways to Look at Dlocations
+===============================================
+
+1) Atomic Domain but Set of Values in Some Tuples
+-----------------------------------------------------
+- Suppose the domain of Dlocations is atomic (i.e., individual location names).  
+- But in some tuples, a set of these atomic values is stored.  
+- Example: `{Houston, Bellaire}` in the first tuple.  
+
+Observation:
+- In this case, Dlocations is NOT functionally dependent on Dnumber.  
+- Why? Because a single Dnumber can correspond to multiple atomic values in the set.  
+
+Table Illustration:
+
++---------+------------+---------+---------------------+
+| Dnumber | Dname      | Manager | Dlocations          |
++---------+------------+---------+---------------------+
+| 1       | Research   | Smith   | {Houston, Bellaire} |
++---------+------------+---------+---------------------+
+
+- Dnumber = 1 → Dlocations = {Houston, Bellaire}  
+- Functional dependency Dnumber → Dlocations does not hold because Dlocations contains multiple values.
+
+---
+
+2) Non-Atomic Domain (Set as Single Value)
+-----------------------------------------------
+- Suppose the domain of Dlocations is sets of locations.  
+- Each attribute value in the tuple is considered a single member of the domain.  
+
+Observation:
+- In this case, Dnumber → Dlocations holds because each tuple contains exactly one set from the domain.  
+- But still, this violates the concept of atomicity in 1NF because sets are not atomic.
+
+Table Illustration (Treating the set as a single value):
+
++---------+------------+---------+---------------------+
+| Dnumber | Dname      | Manager | Dlocations          |
++---------+------------+---------+---------------------+
+| 1       | Research   | Smith   | {Houston, Bellaire} |
++---------+------------+---------+---------------------+
+
+- Dnumber = 1 → Dlocations = {Houston, Bellaire}  
+- Functional dependency holds technically, but the attribute is non-atomic, violating 1NF.
+
+---
+
+✅ Conclusion:
+- In both cases, the DEPARTMENT relation does not satisfy 1NF.  
+- 1NF requires atomic values only, so sets or tuples inside a single attribute are not allowed.  
+
+---
+
+
+===============================================
+Techniques to Achieve 1NF
+===============================================
+
+1) DECOMPOSITION (Best solution)
+--------------------------------
+Split multivalued attribute into a new relation.
+
+Schema:
+DEPARTMENT(Dnumber, Dname, Manager)
+DEPT_LOCATIONS(Dnumber, Dlocation)
+Primary Key of DEPT_LOCATIONS = {Dnumber, Dlocation}
+
+Tables:
+
+DEPARTMENT
++---------+------------+---------+
+| Dnumber | Dname      | Manager |
++---------+------------+---------+
+| 1       | Research   | Smith   |
+| 2       | Finance    | Johnson |
+| 3       | Marketing  | Adams   |
++---------+------------+---------+
+
+DEPT_LOCATIONS
++---------+-----------+
+| Dnumber | Dlocation |
++---------+-----------+
+| 1       | Houston   |
+| 1       | Bellaire  |
+| 2       | Chicago   |
+| 3       | New York  |
+| 3       | Dallas    |
++---------+-----------+
+
+
+2) EXPAND THE KEY (Rarely used)
+-------------------------------
+Keep everything in the same relation but expand the key.
+Composite primary key = {Dnumber, Dlocation}
+
+Table:
+
++---------+------------+---------+-----------+
+| Dnumber | Dname      | Manager | Dlocation |
++---------+------------+---------+-----------+
+| 1       | Research   | Smith   | Houston   |
+| 1       | Research   | Smith   | Bellaire  |
+| 2       | Finance    | Johnson | Chicago   |
+| 3       | Marketing  | Adams   | New York  |
+| 3       | Marketing  | Adams   | Dallas    |
++---------+------------+---------+-----------+
+
+Problem:
+- Redundancy (Dname, Manager repeated)
+- Update anomaly
+- Insertion anomaly
+- Deletion anomaly
+=> Rarely used
+
+
+3) FIXED NUMBER OF ATTRIBUTES (Not recommended)
+-----------------------------------------------
+Replace Dlocations with Dlocation1, Dlocation2, Dlocation3.
+
+Table:
+
++---------+------------+---------+------------+------------+------------+
+| Dnumber | Dname      | Manager | Dlocation1 | Dlocation2 | Dlocation3 |
++---------+------------+---------+------------+------------+------------+
+| 1       | Research   | Smith   | Houston    | Bellaire   | NULL       |
+| 2       | Finance    | Johnson | Chicago    | NULL       | NULL       |
+| 3       | Marketing  | Adams   | New York   | Dallas     | NULL       |
++---------+------------+---------+------------+------------+------------+
+
+Problems:
+- NULL values when locations < 3
+- Artificial ordering (Dlocation1, Dlocation2, etc.)
+- Querying becomes harder
+
+=> Not recommended
+
+
+===============================================
+Nested Relations (Composite Multivalued Attributes)
+===============================================
+
+Schema:
+EMP_PROJ(Ssn, Ename, {PROJS(Pnumber, Hours)})
+
+Problem: PROJS is a nested relation (multivalued + composite).
+
+Unnormalized Table:
+
++-----+-------+-----------------------------+
+| Ssn | Ename | PROJS (Pnumber, Hours)      |
++-----+-------+-----------------------------+
+| 101 | Alice | {(P1, 10), (P2, 5)}         |
+| 102 | Bob   | {(P2, 15), (P3, 20)}        |
++-----+-------+-----------------------------+
+
+Normalized (1NF):
+
+EMP_PROJ1
++-----+-------+
+| Ssn | Ename |
++-----+-------+
+| 101 | Alice |
+| 102 | Bob   |
++-----+-------+
+
+EMP_PROJ2
++-----+---------+-------+
+| Ssn | Pnumber | Hours |
++-----+---------+-------+
+| 101 | P1      | 10    |
+| 101 | P2      | 5     |
+| 102 | P2      | 15    |
+| 102 | P3      | 20    |
++-----+---------+-------+
+
+
+===============================================
+Multi-level Nesting Example
+===============================================
+
+Schema:
+CANDIDATE(Ssn, Name, {JOB_HIST(Company, Highest_position, {SAL_HIST(Year, Max_sal)})})
+
+Normalized:
+
+CANDIDATE_1
++-----+-------+
+| Ssn | Name  |
++-----+-------+
+| 201 | John  |
+| 202 | Maria |
++-----+-------+
+
+CANDIDATE_JOB_HIST
++-----+---------+------------------+
+| Ssn | Company | Highest_position |
++-----+---------+------------------+
+| 201 | Google  | Engineer         |
+| 201 | Amazon  | Manager          |
+| 202 | IBM     | Analyst          |
++-----+---------+------------------+
+
+CANDIDATE_SAL_HIST
++-----+---------+------+---------+
+| Ssn | Company | Year | Max_sal |
++-----+---------+------+---------+
+| 201 | Google  | 2020 | 120000  |
+| 201 | Amazon  | 2022 | 150000  |
+| 202 | IBM     | 2021 | 90000   |
++-----+---------+------+---------+
+
+
+===============================================
+Multiple Multivalued Attributes
+===============================================
+
+Schema:
+PERSON(Ss#, {Car_lic#}, {Phone#})
+
+Wrong Approach (All-key relation):
+
++-----+----------+---------+
+| Ss# | Car_lic# | Phone#  |
++-----+----------+---------+
+| 501 | C123     | 111-222 |
+| 501 | C123     | 333-444 |
+| 501 | C789     | 111-222 |
+| 501 | C789     | 333-444 |
++-----+----------+---------+
+
+Problem:
+- Creates unnecessary combinations of Car ↔ Phone
+- Redundancy
+
+Correct Approach (Decompose):
+
+P1 (Cars)
++-----+----------+
+| Ss# | Car_lic# |
++-----+----------+
+| 501 | C123     |
+| 501 | C789     |
++-----+----------+
+
+P2 (Phones)
++-----+---------+
+| Ss# | Phone#  |
++-----+---------+
+| 501 | 111-222 |
+| 501 | 333-444 |
++-----+---------+
+
+
+===============================================
+Special Case: Complex Data Types
+===============================================
+
+Modern databases allow:
+- Images
+- Videos
+- Documents
+- Audio
+
+Stored as:
+- BLOB (Binary Large Object)
+- CLOB (Character Large Object)
+
+Even though large, each file is treated as an atomic value.
+=> Still satisfies 1NF.
+
+
+===============================================
+Summary
+===============================================
+
+- 1NF Rule: Attributes must be atomic.
+- Violations: Multivalued attributes, nested relations.
+- Solutions:
+  * Best: Decomposition
+  * Rare: Expanded key
+  * Not recommended: Fixed attributes
+- Special Case: Large objects (BLOBs/CLOBs) are atomic.

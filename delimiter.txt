@@ -1,0 +1,28 @@
+Q : What is a delimiter(সীমানা নির্ধারণকারী) in MySQL?
+-> In MySQL, the delimiter is the character (or sequence of characters) that tells the MySQL client where a command (SQL
+statement) ends. By default, MySQL uses a semicolon (;) as the statement delimiter.
+
+Example: SELECT * FROM employees;     --> Here, the ; tells MySQL that the query ends here.
+
+Q : Why do we need to change the delimiter?
+- When writing stored procedures, triggers, or functions, the SQL code often contains multiple ; inside the body (to separate statements).
+- If MySQL still thinks ; means "end of the whole procedure," it will stop too early and cause errors.
+- To fix this, we temporarily change the delimiter to something else (commonly // or $$).
+
+# Example with DELIMITER
+DELIMITER //
+
+CREATE PROCEDURE hello_world()
+BEGIN
+    SELECT 'Hello, World!';
+END //
+
+DELIMITER ;
+
+
+# Explanation:
+- DELIMITER // → changes the statement terminator from `;` to `//`.
+- Inside the procedure, we can safely use ; to end SQL statements.
+- END // → marks the end of the procedure.
+- DELIMITER ; → restore the delimiter back to the default ;.
+

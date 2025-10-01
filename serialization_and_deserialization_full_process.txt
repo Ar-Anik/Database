@@ -1,0 +1,123 @@
+Q : what is DB wire Protocol?
+-> A Database Wire Protocol is basically the language of bytes that the database server and the client driver use
+to talk to each other over the network (usually via TCP).
+
+Q : what is parsing?
+-> Parsing is like reading something carefully and understanding its structure. For example :
+If we get a sentence, our brain figures out the subject, verb, and object. In computers, parsing means taking text
+or data (like code, JSON, or bytes from a database) and breaking it down into a format the program can understand
+and work with.
+-> Analyzing structured text (or bytes) to create an internal structured object (like a parse tree)
+-> Parsing means analyzing a sequence of bytes or text according to a grammar or format, and converting it into a
+structured internal representation.
+
+Q : What is Deserialization?
+-> Converting raw bytes from the wire (or a file) into a native in-memory representation.
+
+-> Case-1: Client ↔ Application Server
+
+Step-A: Client creates in-memory data
+Example: a JS object, let data = { name: "Anik", age: 30 };
+
+Step-B: Serialization (Client side)
+Convert object to a transportable format, usually JSON or XML.
+- let serialized = JSON.stringify(data); // JSON string
+
+Step-C: Send over network
+HTTP request sends JSON bytes to server.
+
+Step-D: Deserialization (Server side)
+Server parses the received JSON string to recreate internal object (Python dict, Java object, etc.)
+
+import json
+deserialized = json.loads(received_json)
+
+So, Client memory → JSON bytes → Server memory
+
+-> Case-2: Application Server ↔ Database Server
+
+Step-A: Application Server Prepares Query Data
+- Inside application server (e.g., Python, Java, Node.js), usually have some in-memory objects representing data.
+Example in Python: data = {'name': 'Anik', 'age': 30}
+- These are high-level language objects (Python dict, string, int).
+- The database cannot understand Python objects directly — it only understands its own wire protocol.
+
+Step-B: Serialization by Database Driver
+- The database driver (e.g., psycopg2 for PostgreSQL, mysqlclient for MySQL) is responsible for translating
+application objects into a form that the database server can understand.
+- This process is serialization.
+- Examples:
+  1. Python str("Anik") → UTF-8 encoded byte string → sent as VARCHAR.
+  2. Python int(30) → converted into binary or text format depending on protocol → sent as INT.
+  3. Python datetime → converted to ISO 8601 string or DB-specific binary timestamp → sent as TIMESTAMP.
+
+So the driver serializes application objects into database wire protocol bytes.
+
+Step-C: Sending Query Over the Network
+- The SQL query and parameter values are transmitted from the application server to the database server using the
+database’s wire protocol (PostgreSQL Wire Protocol, MySQL Protocol, TDS for SQL Server, etc.).
+- At this point, the database sees only bytes on the TCP connection, not Python objects.
+- Example (simplified view): INSERT INTO users (name, age) VALUES ('Anik', 30)
+
+But in reality, it’s sent in a binary packet structure defined by the DB protocol.
+
+Step-D: Database Receives Query
+- The database server accepts the incoming request and begins to parse the protocol message.
+- Parsing involves:
+  1. Reading the SQL command (INSERT INTO users...).
+  2. Reading the parameters ('Anik', 30).
+  3. Converting the serialized byte values into the database’s internal representation:
+    * 'Anik' (UTF-8 bytes) → internal VARCHAR format.
+    * 30 (bytes) → internal INT type.
+
+This step is essentially deserialization on the DB side, but instead of recreating Python/Java objects, the DB
+reconstructs its own internal typed values.
+
+Step-E: Database Executes Query
+- Once the SQL command and parameter values are fully parsed into the DB’s internal representation, the database engine executes the query.
+- Example:
+  1. Creates a new row in the users table.
+  2. Stores "Anik" as VARCHAR, 30 as INT in storage pages.
+
+-> Case-3: Database Server → Application Server
+
+Step-A: DB fetches results
+- DB executes insert query, retrieves rows from storage (e.g., ('Anik', 30)).
+- Internally, they are stored in DB-native formats (VARCHAR, INT).
+
+Step-B: Serialization (Database side)
+- DB converts internal row data → wire protocol bytes.
+  * VARCHAR("Anik") → UTF-8 encoded bytes.
+  * INT(30) → integer bytes.
+
+Step-C: Send over network
+- These protocol messages are sent over TCP to the application server.
+
+Step D: Deserialization (Driver / App side)
+- The database driver reads the wire protocol bytes.
+- It deserializes each value back into native language objects:
+  * Bytes "Anik" → Python str("Anik").
+  * Integer bytes → Python int(30).
+- The app now has usable data: row = cursor.fetchone()  # ('Anik', 30) as Python tuple
+
+-> Case-4: Application Server → Client (Response Phase)
+
+Step-A: App prepares response data
+- Example: response_data = {'status': 'success', 'user': {'name': 'Anik', 'age': 30}}
+
+Step-B: Serialization (Server side)
+- The app serializes Python objects → JSON string (or XML, Protobuf etc.).
+
+import json
+serialized = json.dumps(response_data)
+# '{"status":"success","user":{"name":"Anik","age":30}}'
+
+Step-C: Send over network
+- JSON string is encoded as HTTP response bytes → sent back to client.
+
+Step-D: Deserialization (Client side)
+- Browser or mobile app receives HTTP response.
+- It deserializes JSON string → JS object.
+
+let parsed = JSON.parse(received_json);
+console.log(parsed.user.name); // "Anik"

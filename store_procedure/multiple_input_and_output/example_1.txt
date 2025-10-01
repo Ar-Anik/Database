@@ -1,0 +1,15 @@
+DELIMITER //
+
+CREATE PROCEDURE get_user_info(IN p_id INT, IN p_name VARCHAR(100), OUT p_email VARCHAR(100), OUT p_phone VARCHAR(20))
+BEGIN
+   SELECT email, phone
+   INTO p_email, p_phone
+   FROM users
+   WHERE id = p_id AND name = p_name;
+END //
+
+DELIMITER ;
+
+-- Call It :
+CALL get_user_info(2, 'Bob', @email, @phone);
+select @email as Email, @phone as Phone;

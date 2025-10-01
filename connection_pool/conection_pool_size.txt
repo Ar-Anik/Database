@@ -1,0 +1,97 @@
+Q: What is Pool Size?
+- Pool size = the maximum number of database connections maintained in a connection pool.
+- Each connection = one active session with MySQL.
+- Determines how many queries can run in parallel without waiting for a connection.
+
+
+Q: Why Pool Size Matters?
+1. Performance
+- Pool Size Too small → requests wait for connections (increased latency).
+- Pool Size Too large → system overload (MySQL handles too many open connections).
+
+2. Resource usage
+- Each connection consumes MySQL server memory + thread resources.
+- Wasted if connections sit idle without use.
+
+3. Concurrency control
+- Acts like a "traffic regulator" → keeps load balanced between app and DB.
+
+
+-> Related Parameters
+1. pool_size (SQLAlchemy/MySQL Connector)
+- Number of persistent open connections in the pool.
+- Example: pool_size=10 → at most 10 concurrent queries before waiting.
+
+2. max_overflow (SQLAlchemy only)
+- Extra temporary connections allowed above pool size during spikes.
+- Example: pool_size=10, max_overflow=5 → 15 max during bursts.
+
+3. min_size/min_idle connections (some libraries)
+- Minimum connections always kept open → faster response at first request.
+
+4. pool_timeout
+- How long a request waits for a free connection before error.
+
+
+## MySQL Constraint: max_connections
+-> MySQL server-wide cap on simultaneous client connections. Default: 151.
+Includes: application pools, admins, monitoring, replication.
+
+- Example: If max_connections=151 → safe pool usage should be 100–120 total across all apps.
+- Can be changed: SET GLOBAL max_connections = 200;   -- temporary or we can set it in my.cnf for permanent.
+
+
+Q: How to Size Properly ?
+- Formula (rule of thumb): Pool size ≈ (Number of worker threads × expected concurrent queries per worker) (+ overflow if allowed)
+Example:
+If Gunicorn have 8 workers. Each worker runs ~2 concurrent queries then,
+    Pool size ≈ 8 × 2 = 16.
+Add headroom → set pool_size = 20.
+
+-> Compare with MySQL max_connections
+If DB has 200 max connections, and we have 3 apps, each app must not exceed ~50–70 pool connections, otherwise
+total connection will be > 200.
+
+-> Tune for Load
+- Start small (e.g., 5–20).
+- Load test under real traffic.
+- Increase only if connection wait time is high.
+- Never just “max it out” — oversizing reduces performance.
+
+-> Memory Impact
+Each connection consumes memory:
+
+A) Always allocated (per connection)
+- Thread stack → controlled by thread_stack (default = 256 KB).
+- Per-thread overhead → ~100 KB–200 KB for session state, net buffer, protocol structures.
+So, Minimum cost per idle connection: ~350–500 KB.
+
+B) Allocated on demand (per query)
+These buffers are allocated only when needed during query execution:
+- sort_buffer_size (default 256 KB) → used for ORDER BY, GROUP BY.
+- join_buffer_size (default 256 KB) → used for joins without indexes.
+- read_buffer_size (default 128 KB) → for sequential table scans.
+- read_rnd_buffer_size (default 256 KB) → for random reads after sorting.
+- tmp_table_size / max_heap_table_size (default 16 MB) → memory temp tables for joins/sorts.
+
+If our queries involve sorting or joining, these buffers get allocated. Some can be allocated multiple times per
+query (e.g., join buffer for each table in join).
+
+# Case 1: Idle Connection
+thread_stack (256 KB) + overhead (150 KB) ≈ 400 KB
+
+# Case 2: Light Query (simple SELECT with ORDER BY)
+Base 400 KB + sort_buffer_size (256 KB) + read_buffer_size (128 KB) ≈ ~800 KB
+
+# Case 3: Moderate Query (join + sorting)
+Base 400 KB + sort_buffer_size (256 KB) + join_buffer_size (256 KB) + read_buffer_size (128 KB) + read_rnd_buffer_size (256 KB) ≈ ~1.2–1.5 MB
+
+# Case 4: Heavy Query (multi-joins + temp table)
+Base 400 KB + sort/join/read buffers (~900 KB)  + temp table memory (several MB, say 10 MB) ≈ ~11 MB
+
+In normal OLTP workloads (transactions, simple selects, some joins) each connection realistically averages ~1–2 MB.
+
+- So, Example:
+- 200 connections × 2 MB(estimate) ≈ 400 MB RAM (it almost half gb ram)
+With larger queries (e.g., joins, sorting), per-connection memory may spike higher. So higher pool size = more RAM usage.
+

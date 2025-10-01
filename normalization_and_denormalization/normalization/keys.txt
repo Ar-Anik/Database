@@ -1,0 +1,45 @@
+1. Candidate Key
+-> A candidate key of a relation schema is a minimal set of attributes that can uniquely identify every tuple (row)
+in the relation. here minimal means, if we remove any attribute from this set, it will no longer uniquely identify
+tuples. There can be more than one candidate key in a relation. Among all candidate keys, one is chosen as the primary
+key. The rest are called alternate (or secondary) keys.
+
+# Example 1: Simple case
+-> Relation: STUDENT(StudentID, Email, Name, Phone)
+Candidate keys:
+    * {StudentID} (unique for every student)
+    * {Email} (unique for every student)
+Both {StudentID} and {Email} can uniquely identify a student. So, they are candidate keys. If we pick {StudentID} as
+primary key, then {Email} is an alternate key.
+
+# Example 2: Composite candidate key
+-> Relation: COURSE_REGISTRATION(StudentID, CourseID, Semester)
+Here, no single attribute can uniquely identify a row. But the combination {StudentID, CourseID, Semester} uniquely
+identifies a row. So {StudentID, CourseID, Semester} is a candidate key.
+
+2. Superkey
+A superkey of a relation schema is a set of one or more attributes that can uniquely identify each tuple (row) in a
+relation. A superkey may contain extra attributes that are not necessary for uniqueness.
+
+# Example:
+-> Suppose we have a relation STUDENT(StudentID, Name, Email, Phone)
+{StudentID} is a superkey because StudentID is unique. {Email} is also a superkey because each student has a unique
+email. {StudentID, Name}, {StudentID, Name, Phone} is also a superkey (but not minimal, because StudentID alone is enough).
+
+-> Every Primary Key is a Superkey, but not every Superkey is a Primary Key.
+
+3. Prime Attribute
+-> A prime attribute is an attribute that is part of any candidate key of a relation.
+
+# Example:
+In the relation EMPLOYEE(EmpID, SSN, Name, DeptID)
+    * Candidate Keys = {EmpID}, {SSN}
+    * Prime Attributes = EmpID, SSN (because they belong to candidate keys)
+    * Non-prime Attributes = Name, DeptID (because they are not in any candidate key).
+
+4. Non-prime Attribute
+A non-prime attribute (also called non-key attribute) is an attribute that is not part of any candidate key.
+
+# Example:
+Using the same EMPLOYEE relation:
+    * Non-prime Attributes = Name, DeptID. because they don’t appear in any candidate key.

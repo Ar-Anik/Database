@@ -1,0 +1,50 @@
+Link : https://www.geeksforgeeks.org/dbms/denormalization-in-databases/
+Link : https://www.splunk.com/en_us/blog/learn/data-denormalization.html?utm_source=chatgpt.com
+
+-> Data denormalization is the process of intentionally introducing redundancy into a database design by combining tables
+or duplicating data. It’s the opposite of normalization, where the goal is to reduce redundancy and dependency. The main
+purpose of denormalization is to improve query performance at the cost of extra storage and potential data inconsistency.
+
+Q : Why Denormalize?
+- Normalization ensures:
+    1. Less redundancy
+    2. Consistency
+    3. Integrity
+But it can also lead to:
+    1. Many tables
+    2. Complex queries (lots of joins)
+    3. Slower read performance in some cases
+Denormalization is often used in read-heavy systems, like reporting or analytics databases, where performance is
+more important than strict consistency.
+
+# Example
+- Normalized Design (3NF):
+1. Customers:
+-----------------------
+|CustomerID | Name    |
+|-----------|---------|
+|1          | Alice   |
+|2          | Bob     |
+-----------+-----------
+
+2. Orders:
+--------------------------------
+OrderID | CustomerID | Product |
+--------|------------|---------|
+101     | 1          | Laptop  |
+102     | 2          | Phone   |
+--------------------------------
+
+-> If we want CustomerName + Product, we must JOIN Customers and Orders.
+
+- Denormalized Design:
+1. Orders:
+-----------------------------------------------
+OrderID | CustomerID | CustomerName | Product |
+--------|------------|--------------|---------|
+101     | 1          | Alice        | Laptop  |
+102     | 2          | Bob          | Phone   |
+-----------------------------------------------
+
+-> Here, CustomerName is stored in the Orders table (redundancy). This avoids a JOIN but increases storage and
+risk of inconsistency (if a customer changes name, it must be updated in multiple places).

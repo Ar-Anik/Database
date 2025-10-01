@@ -1,0 +1,67 @@
+Q : How stored procedures reduce server network traffic?
+
+1. Client Request
+- User/browser/client website বা API endpoint hit করে। Example : https://myapp.com/orders/report?start=2025-01-01&end=2025-01-31
+- HTTP request → Application server (Django/Flask/Node.js) এ যায়।
+- এখানে browser ↔ application server traffic হয়। SQL query এখনও database-এ যায়নি।
+
+2. Application Server Handling
+- Application server request পায়।
+- Application code request অনুযায়ী DB query prepare করে
+
+> Scenario A: Normal Complex Query
+- Application code থেকে SQL generate হয়:
+
+`SELECT orders.id, customers.name, SUM(items.qty)
+FROM orders
+JOIN customers ON orders.customer_id = customers.id
+JOIN items ON orders.id = items.order_id
+WHERE orders.date BETWEEN '2025-01-01' AND '2025-01-31'
+GROUP BY orders.id, customers.name;`
+
+- DB driver ব্যবহার করে application server, DB server এর সাথে TCP connection stable করে।
+
+> Scenario B: Stored Procedure
+- Application code শুধু Store Procedure call করে :
+`CALL get_monthly_orders('2025-01-01', '2025-01-31');`
+
+- Query text database server এ already stored করা থাকে.
+
+3. DB Driver & TCP Connection
+- Application server, DB driver (mysqlclient, psycopg2 ইত্যাদি) এর মাধ্যমে DB server এর সাথে TCP connection stablish করে.
+- TCP connection safe, ordered, reliable delivery নিশ্চিত করে।
+
+4. Database Server Receives Query
+- TCP connection দিয়ে application server থেকে db server এ query pass হয়
+- long query কখনো একবারে যায় না। TCP automatically ছোট ছোট packet-এ ভাগ করে পাঠায়, এতে Network Traffic বাড়ে।
+- Without Store Procedure : Full complex SQL query parse ও compile হয়।
+- With Store Procedure : Stored procedure pre-compiled থাকে → database শুধু call execute করে।
+
+Observation: SP ব্যবহার করলে database server এর CPU work কমায় না, কিন্তু network এ পাঠানোর query string ছোট হয়।
+
+5. Database Server Executes Query
+- Query Execution means : Joins, filters, aggregations, grouping etc. database server-এ perform হয়।
+- Large data set generate হয় internally।
+- Only necessary result rows তৈরি হয়।
+
+6. Database Server Sends Result
+- Database server TCP connection দিয়ে result set back পাঠায়।
+- Driver receive করে Application server এ।
+- TCP ensures:
+    * No lost packets
+    * Correct order
+    * Error recovery
+
+Observation:
+- Network traffic main factor → size of result set
+- Stored Procedure reduces query string traffic but result set traffic depends on selected data
+
+7. Application Server Processes Result
+- Application server result data process করে → JSON, HTML, CSV ইত্যাদি format করে।
+- Extra logic, formatting, filtering, aggregation (if any) applied here।
+
+8. Response Sent to Client
+- Application server HTTP response পাঠায় browser/API client এ।
+- Network traffic: Application server → Client
+- Stored Procedure does not reduce this traffic, only App server ↔ DB server traffic কমায়।
+

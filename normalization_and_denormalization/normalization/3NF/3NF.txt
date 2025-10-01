@@ -1,0 +1,49 @@
+-> 3NF is based on the concept of transitive dependency. A functional dependency (FD) X → Y in a relation R is
+transitive if there exists a set of attributes Z such that:
+    - Z is neither a candidate key nor a subset of any key of R.
+    - X → Z and Z → Y hold.
+
+A relation R is in 3NF if:
+  - It is already in 2NF.
+  - No non-prime attribute is transitively dependent on the primary key.
+
+Transitive dependency occurs when a non-key attribute depends on another non-key attribute, which in turn depends
+on the primary key. These dependencies are undesirable because they can cause redundancy and update anomalies. 3NF
+eliminates these problem FDs by decomposing the relation into multiple relations where each non-key attribute
+depends directly on a key.
+
+
+# Example: EMP_DEPT Relation
+| Ssn | Ename | Dnumber | Dname | Dmgr_ssn  |
+| --- | ----- | ------- | ----- | --------- |
+| 123 | John  | 10      | IT    | 999       |
+| 124 | Alice | 20      | HR    | 888       |
+| 125 | Bob   | 10      | IT    | 999       |
+---------------------------------------------
+
+Here, Primary Key: Ssn
+- Partial Dependencies: None → Already in 2NF
+- Transitive Dependencies:
+    * Ssn → Dnumber (Ssn is PK)
+    * Dnumber → Dmgr_ssn
+- Therefore, Ssn → Dmgr_ssn is a transitive dependency
+- Problem: Dmgr_ssn depends indirectly on the primary key via Dnumber.
+
+# 3NF Decomposition
+-> ED1 (Employee Info)
+| Ssn | Ename | Dnumber |
+| --- | ----- | ------- |
+| 123 | John  | 10      |
+| 124 | Alice | 20      |
+| 125 | Bob   | 10      |
+-------------------------
+
+-> ED2 (Department Info)
+| Dnumber | Dname | Dmgr_ssn |
+| ------- | ----- | --------- |
+| 10      | IT    | 999       |
+| 20      | HR    | 888       |
+-------------------------------
+
+Now, all non-key attributes depend directly on a primary key. A NATURAL JOIN on ED1 and ED2 will recover the
+original EMP_DEPT without generating spurious tuples.

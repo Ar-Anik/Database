@@ -1,0 +1,22 @@
+DELIMITER //
+CREATE PROCEDURE get_user_stats(IN min_id INT, IN max_id INT, OUT total_users INT, OUT last_user_name VARCHAR(100))
+BEGIN
+    -- Count users in given range
+    SELECT COUNT(*) INTO total_users
+    FROM users
+    WHERE id BETWEEN min_id AND max_id;
+
+    -- Get Last User name in range
+    SELECT name INTO last_user_name
+    FROM users
+    WHERE id BETWEEN min_id AND max_id
+    ORDER BY id DESC
+    LIMIT 1;
+END //
+DELIMITER ;
+
+
+-- Call it :
+CALL get_user_stats(1, 3, @total_user, @last_user_name);
+SELECT @total_user as TotalUsers, @last_user_name as LastUser;
+

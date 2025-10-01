@@ -1,0 +1,31 @@
+Fundamentals of Database Systems Seventh Edition: 468
+
+NULL Values in Tuples (DBMS Design Considerations)
+
+1. Problem of "fat" relations
+- When many attributes are grouped into one relation, some attributes may not apply to all tuples. This leads to
+many NULL values, causing:
+    * Space waste at storage level.
+    * Difficulty in interpretation of attribute meanings.
+    * Complications in joins and queries, since NULL comparisons are tricky.
+
+2. Issues with NULL values
+- Affect aggregate functions (e.g., COUNT, SUM).
+- Comparisons in SELECT/JOIN can give unpredictable results.
+- Multiple meanings of NULL:
+    * Attribute does not apply (e.g., Visa_status for U.S. students).
+    * Value unknown (e.g., Date_of_birth unknown).
+    * Value exists but not recorded yet (e.g., Home phone not yet entered).
+
+Using a single representation for all these meanings causes ambiguity.
+
+3. Design Guideline
+- Avoid attributes that are often NULL in base relations.
+- NULLs should be exceptional cases only, not common.
+- If a column will frequently be NULL → move it to a separate relation.
+Example: Instead of storing Office_number in EMPLOYEE (where only 15% have offices), create a separate relation:
+EMP_OFFICES(Essn, Office_number) for only those employees.
+
+4. Key Criteria
+- Efficient space usage.
+- Avoiding joins with NULLs.

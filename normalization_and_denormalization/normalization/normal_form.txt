@@ -1,0 +1,42 @@
+Fundamentals of Database Systems Seventh Edition: 475
+
+-> Most practical relational design projects take one of the following two approaches:
+1. Conceptual Schema Design করা — যেমন ER (Entity-Relationship) বা EER (Enhanced Entity-Relationship) মডেল ব্যবহার করে কনসেপ্টচুয়াল
+ডিজাইন তৈরি করা এবং সেটাকে relation এ map করা।
+2. Existing Knowledge-এর ভিত্তিতে Relation Design করা — অর্থাৎ আগে থেকে বিদ্যমান ফাইল, ফর্ম বা রিপোর্টের কাঠামো দেখে relation ডিজাইন করা।
+
+এই দুইটি পদ্ধতির যেকোনোটি অনুসরণ করার পর, relation গুলোকে Normalization এর মাধ্যমে refine করতে হয় যাতে ডেটাবেসে কোনো anomaly না থাকে।
+
+-> Normalization of data can be considered a process of analyzing the given relation schemas based on their functional
+dependency and primary keys to achieve the desirable properties of
+    (1) minimizing redundancy and
+    (2) minimizing the insertion, deletion, and update anomalies
+
+It can be considered as a “filtering” or “purification” process to make the design have successively better quality.
+
+Normal form পরীক্ষায় ব্যর্থ হওয়া relation-কে ছোট ছোট relation schema-তে ভেঙে (decompose করে) ফেলা হয়। প্রতিটি নতুন relation
+schema মূল relation-এর attribute-এর একটি subset ধারণ করে এবং সেই normal form পরীক্ষায় উত্তীর্ণ হয়, যেখানে মূল relation উত্তীর্ণ
+হতে পারেনি। অতএব, normalization প্রক্রিয়া ডেটাবেস ডিজাইনারদের জন্য নিম্নলিখিত সুবিধা প্রদান করে :
+1. Relation schema বিশ্লেষণের জন্য একটি আনুষ্ঠানিক কাঠামো — যা মূলত তাদের keys এবং attribute-গুলোর মধ্যে থাকা functional
+dependency-এর ওপর ভিত্তি করে করা হয়।
+2. একাধিক normal form test — যা প্রতিটি relation schema-র ওপর প্রয়োগ করা যায়, যাতে পুরো relational database-কে প্রয়োজনীয়
+মাত্রায় normalize করা সম্ভব হয়।
+
+Normalization আমাদেরকে কীভাবে relation schema বিশ্লেষণ করতে হবে তার নিয়ম-কানুন দেয়। এবং এক ধাপ এক ধাপ করে Normalization
+করতে সাহায্য করে, যাতে ডেটাবেসকে যতটা possible refine করা যায়।
+
+শুধু normal form পূরণ করলেই ভালো ডেটাবেস ডিজাইন নিশ্চিত হয় না। ডেটাবেসের প্রতিটি relation schema আলাদাভাবে 3NF-এ আছে কিনা সেটি
+পরীক্ষা করা যথেষ্ট নয়। Normalization প্রক্রিয়ায় decomposition করার সময় আরও কিছু অতিরিক্ত বৈশিষ্ট্য নিশ্চিত করতে হয়, যা সব relation
+schema একত্রে পূরণ করবে। এর মধ্যে দুটি গুরুত্বপূর্ণ বৈশিষ্ট্য হলো:
+1. Nonadditive join বা Lossless join property — এটি নিশ্চিত করে যে decomposition করার পর relation schema-গুলোকে আবার
+join করলে কোনো spurious tuple (ভুল/অপ্রয়োজনীয় tuple) তৈরি হবে না।
+2. Dependency preservation property — এটি নিশ্চিত করে যে decomposition-এর পর প্রতিটি functional dependency কোনো না কোনো
+relation-এ সংরক্ষিত থাকবে।
+
+Nonadditive join property অত্যন্ত গুরুত্বপূর্ণ এবং যেকোনো মূল্যে এটি বজায় রাখতে হবে। তবে dependency preservation property যদিও
+desirable (কাম্য), অনেক সময় এটিকে ত্যাগ করতে হয়।
+
+
+
+-> ডাটাবেস ডিজাইনারদের সর্বোচ্চ normal form পর্যন্ত normalize করতেই হবে, এমন নয়। অনেক সময় performance-এর কারণে relation-গুলোকে
+নিম্নতর normal form (যেমন 2NF) এ রাখা হয়। তবে এর ফলে বিভিন্ন anomaly মোকাবিলা করার cost বা ঝুঁকি নিতে হয়।

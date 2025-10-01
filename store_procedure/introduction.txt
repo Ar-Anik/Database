@@ -1,0 +1,92 @@
+Q : 1. What is a Stored Procedure?
+- A Stored Procedure is a precompiled set of SQL statements stored in the database that we can call by name.
+It helps us reuse logic, reduce code duplication, and improve performance (because MySQL caches execution plans).
+It can accept parameters (input, output, or both) or have no parameters. It supports control structures (loops,
+conditions, cursors, etc.), making it behave like a small program inside MySQL.
+
+
+Q : How to Create a Stored Procedure in MySQL?
+# General Syntax:
+DELIMITER //
+
+CREATE PROCEDURE procedure_name ([parameters])
+BEGIN
+    -- MYSQL Statements
+END //
+
+DELIMITER ;
+
+- DELIMITER // → changes the command delimiter so MySQL does not stop execution at the first ;.
+- [parameters] → can be IN (input), OUT (output), or INOUT (both input & output).
+
+
+> Case-1: Stored Procedure with No Parameter
+DELIMITER //
+CREATE PROCEDURE get_all_users()
+BEGIN
+    SELECT * FROM USERS;
+END //
+
+DELIMITER ;
+
+- call it :
+CALL get_all_users();
+
+
+> Case-2: Stored Procedure with 1 Parameter (IN)
+DELIMITER //
+
+CREATE PROCEDURE get_user_by_id(IN userId INT)
+BEGIN
+   SELECT * FROM users WHERE id = userId;
+END //
+
+DELIMITER ;
+
+- call it :
+CALL get_user_by_id(10);
+
+
+> Case-3: Stored Procedure with Multiple Parameters
+DELIMITER //
+
+CREATE PROCEDURE add_user(IN userEmail varchar(100), IN userPhone varchar(20))
+BEGIN
+   INSERT INTO users(email, phone) VALUES(userEmail, userPhone);
+END //
+
+DELIMITER ;
+
+- call it :
+CALL add_user('anik@gmail.com', '124586542');
+
+
+> Case-4: Stored Procedure with IN, OUT Parameters
+DELIMITER //
+
+CREATE PROCEDURE get_user_email(IN userId INT, OUT emailOut varchar(100))
+BEGIN
+    SELECT email INTO emailOut FROM users WHERE id = userId;
+END //
+
+DELIMITER ;
+
+- In MySQL, when we want to take a value from a query and assign it to a variable (local or OUT parameter), we must
+use the SELECT ... INTO syntax.
+
+- INTO emailout means : Fetch the email value from the table and store it inside the OUT parameter emailOut so the
+caller can use it.”
+
+- Without INTO : SELECT email FROM users WHERE id = userId;
+This will return a result set (like a normal query). But the OUT parameter (emailOut) will remain NULL, because nothing
+was stored in it.
+
+- call it:
+CALL get_user_email(2, @output_email);
+SELECT @output_email;
+
+Q :  Why use @variables here?
+- In MySQL, variables that start with @ are called user-defined session variables.
+- They exist only for current database session/connection.
+- We can assign values to them and use them later in queries.
+

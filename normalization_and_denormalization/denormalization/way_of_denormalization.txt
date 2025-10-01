@@ -1,0 +1,35 @@
+# The ways of denormalization :
+1. Adding Redundant Columns
+- Store extra information in a table to avoid joins.
+- Example: Instead of joining Customers to get the customer’s name, store customer_name directly in the Orders table.
+
+2. Storing Derived / Precomputed Data
+- Save values that could be calculated, instead of recalculating every time.
+- Example: In an OrderDetails table, store both quantity and price but also store total_amount instead of calculating,
+quantity * price on every query.
+
+3. Combining Tables (Merging Relations)
+- Merge two frequently joined tables into one.
+- Example: Instead of separate Orders and OrderItems, create a single wide table that includes both.
+
+4. Splitting Tables Horizontally (Partitioning)
+- Put frequently accessed columns in one table and rarely used columns in another to reduce query overhead.
+- Example: Keep user_id, name, email in one table, but put user_bio, profile_picture in another table if rarely needed.
+
+5. Splitting Tables Vertically
+- Duplicate subsets of rows into another table for faster access.
+- Example: In a log system, keep the last 30 days of logs in a smaller table (RecentLogs) for quick queries, while
+keeping all history in LogsArchive.
+
+6. Adding Summary / Aggregate Tables
+- Create extra tables to store pre-aggregated results.
+- Example: Instead of computing SUM(sales) for each region repeatedly, maintain a RegionalSalesSummary table with
+precomputed totals.
+
+7. Duplicating Data Across Tables
+- Store the same piece of data in multiple tables for performance.
+- Example: Keep customer_address in both Customers and Orders tables to avoid joins.
+
+8. Using Arrays or JSON Instead of Separate Tables
+- Store multivalued attributes in a single column (not normalized but faster in some cases).
+- Example: Instead of a separate OrderItems table, keep products = [Laptop, Mouse, Keyboard] in one column using JSON/array.

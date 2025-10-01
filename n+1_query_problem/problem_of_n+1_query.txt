@@ -19,7 +19,6 @@ Example:
 - More queries = more chances of locks, deadlocks, and contention.
 
 5. Harder to Scale
-- With N+1, scaling horizontally (more servers) doesn’t help much because the core inefficiency is query
-count, not raw CPU.
+- With N+1, scaling horizontally (more servers) doesn’t help much because the core inefficiency is query count, not raw CPU.
 - Database becomes the bottleneck.
 

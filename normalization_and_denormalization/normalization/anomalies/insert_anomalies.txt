@@ -1,0 +1,29 @@
+Fundamentals of Database Systems Seventh Edition: 466
+
+-> Insertion anomalies occur when certain data cannot be inserted into a relation (table) without the presence of additional,
+unnecessary or inconsistent data.
+
+# Example : STUDENT_COURSE Relation
+Suppose we have a single table STUDENT_COURSE :
++-----------+----------+-------------+------------------+
+| StudentID | Name     | CourseCode  | CourseTitle      |
++-----------+----------+-------------+------------------+
+| 101       | Alice    | CSE101      | Database Systems |
+| 102       | Bob      | CSE102      | Networking       |
+---------------------------------------------------------
+
+Here, both Student data and Course data are stored together in the same table.
+
+-> Insertion Anomaly Cases
+> Case 1: Adding a new student (not yet enrolled in any course)
+Suppose a new student Charlie (ID=103) joins, but hasn’t enrolled in any course. To insert him into STUDENT_COURSE, we are
+forced to put NULL values for CourseCode and CourseTitle:
+        | 103 | Charlie | NULL | NULL |
+This causes NULL problems and violates integrity, because the relation mixes two different entities (Student + Course).
+
+> Case 2: Adding a new course (with no students yet)
+Suppose a new course CSE103 – Operating Systems is offered, but no one has enrolled yet. In this design, we cannot insert
+the course alone into STUDENT_COURSE, because StudentID (part of primary key) cannot be NULL. We’d need to insert a fake
+student record just to store this course.
+This makes insertion of new courses impossible without unrelated student data.
+

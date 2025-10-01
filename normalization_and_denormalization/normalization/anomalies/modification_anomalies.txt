@@ -1,0 +1,32 @@
+Fundamentals of Database Systems Seventh Edition: 466
+
+-> A Modification Anomaly occurs when updating data in one place requires multiple updates in other rows, due to data redundancy.
+
+-> If all copies are not updated correctly:
+- The database becomes inconsistent (same fact stored with different values).
+- Updating one fact becomes unnecessarily complex and error-prone.
+
+# Example: STUDENT_COURSE Relation
+Suppose we store student and course data together in STUDENT_COURSE :
++-----------+----------+-------------+------------------+----------------+
+| StudentID | Name     | CourseCode  | CourseTitle      | Instructor     |
++-----------+----------+-------------+------------------+----------------+
+| 101       | Alice    | CSE101      | Database Systems | Dr. Smith      |
+| 102       | Bob      | CSE101      | Database Systems | Dr. Smith      |
+| 103       | Anik     | CSE101      | Database Systems | Dr. Smith      |
+| 104       | Charlie  | CSE102      | Networking       | Dr. Brown      |
+| 105       | Oni      | CSE101      | Database Systems | Dr. Smith      |
+--------------------------------------------------------------------------
+
+-> Modification Anomaly Case
+Case: Instructor of a course changes
+- Suppose the instructor for CSE101 – Database Systems changes from Dr. Smith to Dr. Miller.
+- Since course info is repeated for every enrolled student, we must update all rows where CourseCode = CSE101.
+- So we must update:
+    | 101 | Alice   | CSE101 | Database Systems | Dr. Miller |
+    | 102 | Bob     | CSE101 | Database Systems | Dr. Miller |
+    | 103 | Anik    | CSE101 | Database Systems | Dr. Smith  |
+    | 105 | Oni     | CSE101 | Database Systems | Dr. Miller |
+
+If we forget to update one row (say, Alice’s row), the database becomes inconsistent. The same course has two different
+instructors → a Modification Anomaly.

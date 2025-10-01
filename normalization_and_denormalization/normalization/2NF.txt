@@ -1,0 +1,102 @@
+1. Functional Dependency (FD)
+-> A functional dependency is a relationship between two sets of attributes in a table (relation):
+                        𝑋 → 𝑌
+- X is called the determinant.
+- Y is functionally dependent on X.
+- It means: If we know X, then we can uniquely determine Y.
+
+# Example:
+| StudentID | Name  | Dept |
+| --------- | ----- | ---- |
+| 101       | Alice | CS   |
+| 102       | Bob   | EE   |
+------------+-------+------+
+
+- StudentID → Name (StudentID determines Name)
+- StudentID → Dept (StudentID determines Dept)
+
+2. Full Functional Dependency vs Partial Dependency
+(A) Full Functional Dependency
+A functional dependency 𝑋 → 𝑌 is full if all attributes of X are necessary to determine Y. If we remove any
+attribute from X, the dependency no longer works. Full dependency usually appears in composite keys (keys with
+more than one attribute).
+
+# Example:
+Suppose we have a table:
+| Ssn | Pnumber | Hours | Ename |
+| --- | ------- | ----- | ----- |
+| 111 | P1      | 40    | John  |
+| 111 | P2      | 20    | John  |
+| 222 | P1      | 35    | Alice |
+------+---------+-------+-------+
+
+- Composite key: {Ssn, Pnumber} (combination of Ssn and Pnumber uniquely identifies a record)
+- Check Hours dependency: {Ssn,Pnumber} → Hours
+
+Q : Is it full dependency?
+- If we remove Ssn, does Pnumber → Hours hold? No.
+- If we remove Pnumber, does Ssn → Hours hold? No.
+- Conclusion: Full dependency
+
+(B) Partial Dependency
+A functional dependency is partial if some attribute of the key is unnecessary to determine Y. In other words,
+Y can be determined by only part of the composite key.
+
+# Example (same table): {Ssn,Pnumber} → Ename
+- Ename depends only on Ssn, not on Pnumber.
+- So Ssn → Ename holds.
+- This is partial dependency, because the dependency does not require the full key.
+
+-> A table is in 2NF if:
+- It is already in 1NF (all attributes atomic, no repeating groups)
+- No partial dependency exists for non-prime attributes.
+
+Here, Prime attributes are part of a candidate key. Non-prime attributes are not part of a candidate key.
+
+So essentially:
+- If a non-prime attribute depends only on part of a composite key, the table violates 2NF.
+- We fix this by splitting the table.
+
+# Example
+Original Table: WORKS
+| Ssn | Pnumber | Hours | Ename |
+| --- | ------- | ----- | ----- |
+| 111 | P1      | 40    | John  |
+| 111 | P2      | 20    | John  |
+| 222 | P1      | 35    | Alice |
+------+---------+-------+-------+
+
+Composite key: {Ssn, Pnumber}
+
+Functional dependencies:
+- {Ssn, Pnumber} → Hours → full functional dependency.
+
+Partial Dependency:
+{Ssn, Pnumber} → Ename → partial dependency (Ssn → Ename)
+
+-> To bring it to 2NF, split into two tables:
+
+# Table 1: EMPLOYEE
+| Ssn | Ename |
+| --- | ----- |
+| 111 | John  |
+| 222 | Alice |
+------+-------+
+
+# Table 2: WORKS_ON
+| Ssn | Pnumber | Hours |
+| --- | ------- | ----- |
+| 111 | P1      | 40    |
+| 111 | P2      | 20    |
+| 222 | P1      | 35    |
+------+---------+-------+
+
+Now :
+- Hours is fully dependent on {Ssn, Pnumber}
+- Ename depends fully on Ssn in the EMPLOYEE table
+
+-> Steps to Achieve 2NF:
+    1. Identify composite keys
+    2. Find partial dependencies of nonprime attributes
+    3. Split the table so that each nonprime attribute depends on the full key only
+

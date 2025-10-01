@@ -1,0 +1,67 @@
+Q : When application server and database server both are different location how they communicate?
+
+1. Application Server → Database Server
+- Application server (যেমন Django/Flask/Node.js) database driver (যেমন psycopg2 for PostgreSQL, mysqlclient/SQLAlchemy for MySQL) ব্যবহার করে।
+- Driver আসলে একটা TCP connection create করে, Database server-এর সাথে।
+- তারপর SQL query (string আকারে) ওই connection দিয়ে পাঠানো হয়।
+
+2. Database Server → Application Server
+- Database server query parse করে, execute করে, এবং result ফেরত পাঠায় network এর মাধ্যমে।
+- Application server ওই result নিয়ে JSON/HTML বানিয়ে Client (Browser) এ পাঠায়।
+
+-> Protocol / Medium
+Communication হয় Database-specific wire protocol দিয়ে:
+    - PostgreSQL → PostgreSQL Wire Protocol
+    - MySQL → MySQL Client/Server Protocol
+    - SQL Server → TDS (Tabular Data Stream) protocol
+
+-> Transport layer সাধারণত TCP/IP socket (port ব্যবহার করে):
+    - PostgreSQL default → 5432
+    - MySQL default → 3306
+    - SQL Server → 1433
+
+
+# Example: Django settings
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydb',
+        'USER': 'dbuser',
+        'PASSWORD': 'secret',
+        'HOST': '192.168.1.50',   # Database server IP
+        'PORT': '5432',
+    }
+}
+
+1. 'ENGINE': 'django.db.backends.postgresql'
+Django কে জানতে হবে, কোন Database Backend Engine ব্যবহার করতে হবে।
+
+- 'django.db.backends.postgresql' মানে Django PostgreSQL driver ব্যবহার করবে।
+- যদি MySQL হয় → 'django.db.backends.mysql'
+- যদি SQLite হয় → 'django.db.backends.sqlite3'
+- যদি Oracle হয় → 'django.db.backends.oracle'
+
+এটা basically Django ORM-কে বলে দেয় কোন database driver দিয়ে query translate করতে হবে।
+
+2. 'USER': 'dbuser'
+- PostgreSQL user account যার permission আছে mydb ডাটাবেসে query চালানোর।
+
+3. 'PASSWORD': 'secret'
+- dbuser user এর password।
+- Django application এই password ব্যবহার করে authentication করবে PostgreSQL server-এর সাথে।
+
+4. 'HOST': '192.168.1.50'
+- এখানে Django (application server) কে বলা হচ্ছে PostgreSQL server কোথায় আছে।
+- 192.168.1.50 মানে PostgreSQL server অন্য কোনো মেশিনে চলছে, সেই মেশিনের IP।
+
+5. 'PORT': '5432'
+- PostgreSQL-এর default port হলো 5432।
+- Django ওই port এ TCP connect create করবে PostgreSQL server-এ।
+
+Q : How Django and DB Server Create Connection ?
+- Django ORM → PostgreSQL driver ব্যবহার করে TCP connection create করে : Application server (Django) → TCP/IP → 192.168.1.50:5432 (PostgreSQL server)
+- Authentication হয় (USER + PASSWORD)।
+- সফল হলে Django → SQL Query পাঠায় (যেমন SELECT * FROM users;)।
+- PostgreSQL query execute করে → Result network দিয়ে ফেরত পাঠায় Django-তে।
+- Django ORM result কে Python object (QuerySet) আকারে দেয়।
+

@@ -1,0 +1,32 @@
+Fundamentals of Database Systems Seventh Edition: 466
+
+-> A Deletion Anomaly occurs when deleting a record that represents one fact in the database inadvertently causes the loss
+of additional, valuable information that should not have been deleted.
+
+This usually happens when two different entities are stored in the same table, so deleting one entity’s data also deletes
+another entity’s data unintentionally.
+
+# Example: STUDENT_COURSE Relation
+Let’s say we store both student and course information in one table STUDENT_COURSE:
++-----------+----------+-------------+------------------+
+| StudentID | Name     | CourseCode  | CourseTitle      |
++-----------+----------+-------------+------------------+
+| 101       | Alice    | CSE101      | Database Systems |
+| 102       | Bob      | CSE101      | Database Systems |
+| 103       | Charlie  | CSE102      | Networking       |
+---------------------------------------------------------
+
+-> Deletion Anomaly Case
+Case: Last student enrolled in a course drops it
+- Suppose Charlie (103) is the only student enrolled in CSE102 – Networking.
+- If Charlie withdraws from the course, we delete his row: DELETE FROM STUDENT_COURSE WHERE StudentID = 103;
+- Resulting table:
++-----------+----------+-------------+------------------+
+| StudentID | Name     | CourseCode  | CourseTitle      |
++-----------+----------+-------------+------------------+
+| 101       | Alice    | CSE101      | Database Systems |
+| 102       | Bob      | CSE101      | Database Systems |
+---------------------------------------------------------
+
+Now, all information about CSE102 – Networking is lost, even though the course still exists in reality. This is an
+unintended loss of information → classic Deletion Anomaly.

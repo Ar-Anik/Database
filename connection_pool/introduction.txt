@@ -1,0 +1,24 @@
+Link : https://www.cockroachlabs.com/blog/what-is-connection-pooling/?utm_source=chatgpt.com (It approch CockroachDB)
+Link : https://github.com/Ar-Anik/system-design-bangla/blob/master/sections/database/README.md
+
+Q: What is a Connection Pool?
+-> A connection pool is a cache (pool) of open database connections maintained so that multiple requests (from
+threads, processes or users) can reuse them instead of opening a new connection every time.
+
+# Without pooling:
+each request → open TCP connection → handshake/authentication → query → close → repeat (slow, resource-expensive).
+
+# With pooling:
+request → borrow a connection from pool → query → return connection to pool (fast, resource-efficient).
+
+-> In Python ORM like SQLAlchemy (with create_engine) or in MySQL mysql.connector.pooling.MySQLConnectionPool
+manage this automatically.
+
+Q: Why Pooling Matters?
+-> Opening/closing a MySQL connection is expensive because it involves:
+    - TCP handshake
+    - MySQL authentication
+    - Session setup
+
+If we’re handling hundreds/thousands of requests per second, constantly opening/closing connections kills performance.
+On the other hand, Pooling reduces latency and resource usage. It handle higher concurrency without overwhelming MySQL.

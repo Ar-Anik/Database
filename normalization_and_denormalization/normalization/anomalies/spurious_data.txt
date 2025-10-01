@@ -1,0 +1,20 @@
+-> Generation of invalid and spurious data during joins on base relations with matched attributes that may not
+represent a proper (foreign key, primary key) relationship.
+
+-> When we design database tables (relations):
+- Always connect tables using Primary Key – Foreign Key pairs.
+- Don’t rely on “same-looking” columns that are not officially related.
+- Otherwise, we may get spurious tuples (wrong or meaningless rows after a JOIN).
+
+# Bad Example (spurious tuples possible)
+STUDENT(Roll, Name, Hobby)
+TEACHER(Id, Name, Subject)
+
+Here, both tables have a column called Name. If we join them like this:
+SELECT *
+FROM STUDENT S
+JOIN TEACHER T
+ON S.Name = T.Name;
+
+Problem: If there’s a student named “Alice” and a teacher named “Alice,” the join will connect them — even though
+they are not related at all. This creates spurious tuples (rows that don’t make sense).
