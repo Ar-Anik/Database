@@ -37,3 +37,8 @@ This will return all employees whose salary is greater than at least one of thos
     * The subquery must return a single column — so it can act like a list of values.
     * If it returns more than one column, MySQL will raise an error.
     * If subquery returns NULL only, the condition is always false.
+
+-> So,
+1. > ANY = greater than the minimum
+2. < ANY = less than the maximum
+3. = ANY = equivalent to IN

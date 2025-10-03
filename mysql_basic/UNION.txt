@@ -1,0 +1,28 @@
+Q : What is UNION?
+-> The UNION operator is used to combine the result sets of two or more SELECT statements into a single result.
+By default, UNION removes duplicate rows (only unique rows remain).
+
+# Rules/Requirements for UNION
+- Each SELECT must have the same number of columns.
+- The columns must have similar data types (e.g., INT with INT, VARCHAR with VARCHAR).
+- The columns must be in the same order in each SELECT.
+
+# Query-1
+SELECT City FROM Customers
+UNION
+SELECT City FROM Suppliers
+ORDER BY City;
+
+# Query-2
+SELECT City, Country FROM Customers
+WHERE Country='Germany'
+UNION
+SELECT City, Country FROM Suppliers
+ORDER BY City;
+
+# Query-3
+SELECT 'Customer' as Type, ContactName, City, Country
+FROM Customers
+UNION
+SELECT 'Supplier', ContactName, City, Country
+FROM Suppliers;

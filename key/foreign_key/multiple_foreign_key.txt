@@ -1,0 +1,20 @@
+# Foreign Key Across Multiple Relationships
+-> A child table can have multiple foreign keys referencing:
+- Multiple parent tables
+- Multiple columns of the same parent table.
+
+CREATE TABLE enrollments (
+    student_id INT,
+    course_id INT,
+    teacher_id INT,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+);
+
+
+# This ensures that:
+- Only existing students can enroll.
+- Only existing courses can be taken.
+- Only existing teachers can be assigned.

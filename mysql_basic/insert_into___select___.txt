@@ -1,0 +1,32 @@
+# INSERT INTO SELECT
+- Used to copy data from one table into another table.
+- Existing rows in the target table are not affected (new rows are just added).
+
+-> Key Points
+- The number of columns in INSERT INTO and SELECT must match.
+- The data types of source and target columns must be compatible.
+- If target table has extra columns not listed:
+    1. Default value is used if defined.
+    2. NULL is used if column is nullable and has no default.
+    3. Error if column is NOT NULL and has no default.
+
+- INSERT INTO table2 SELECT * FROM table1; only works if both tables have the same number of columns with
+compatible types.
+
+- If table2 has more columns than table1, we must specify which target columns will receive the copied values.
+INSERT INTO table2 (id, name)
+SELECT * FROM table1;
+
+- We can use a WHERE clause in the SELECT to filter which rows get copied.
+INSERT INTO Employees_Backup
+SELECT * FROM Employees
+WHERE department_id = 3;
+
+- Can also copy data between tables in different databases:
+INSERT INTO db2.table2 (id, name)
+SELECT id, name FROM db1.table1;
+
+# Query-1
+INSERT INTO Customers (CustomerName, City, Country)
+SELECT SupplierName, City, Country FROM Suppliers
+WHERE Country="Germany";

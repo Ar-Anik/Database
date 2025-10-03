@@ -1,0 +1,73 @@
+-> The CASE statement in MySQL is used to perform conditional logic within SQL queries, similar to an if-then-else
+structure in programming languages.
+
+It allows us to evaluate conditions and return a specific value when the first true condition is met. Once a
+condition evaluates to true, MySQL stops checking further conditions and returns the corresponding result.
+
+# Syntax :
+CASE
+    WHEN Condition1 THEN Result1
+    WHEN Condition2 THEN Result2
+    ....
+    ELSE default_result
+END
+
+# Key Points:
+1. Sequential Evaluation:
+- Conditions are evaluated in the order they appear.
+- As soon as MySQL finds a condition that is true, it returns the associated result and stops evaluating the rest.
+
+2. ELSE Clause:
+- The ELSE part is optional.
+- If no conditions are true and ELSE is provided, MySQL returns the ELSE value.
+- If ELSE is not provided and none of the conditions are true, MySQL returns NULL.
+
+3. Usage in Queries:
+- Can be used in SELECT, UPDATE, or ORDER BY statements.
+- Useful for transforming data dynamically without creating additional columns.
+
+
+# Query-1
+SELECT Id, Name,
+CASE
+    WHEN Price > 30 THEN 'Price is greater than 30'
+    WHEN Price = 30 THEN 'Price is 30'
+    ELSE 'Price less than 30'
+END as PriceText
+FROM Products;
+
+# Query-2
+SELECT CustomerName, City, Country
+FROM Customers_1
+ORDER BY(
+CASE
+   WHEN City IS NULL THEN Country
+   ELSE City
+END);
+
+# Query-3
+SELECT name, status
+FROM Employees
+ORDER BY
+    CASE status
+        WHEN 'Manager' THEN 1
+        WHEN 'Team Lead' THEN 2
+        WHEN 'Staff' THEN 3
+        ELSE 4
+    END;
+
+-> ORDER BY with CASE:
+- Normally, ORDER BY sorts results alphabetically or numerically.
+- But here, we’re customizing the order using a CASE expression.
+
+# The logic:
+- If status = 'Manager', assign 1
+- If status = 'Team Lead', assign 2
+- If status = 'Staff', assign 3
+Otherwise (any other status, e.g., Intern), assign 4
+
+# This means:
+- Managers will appear first (lowest number = highest priority).
+- Team Leads will appear second.
+- Staf will appear third.
+Everyone else will appear last.

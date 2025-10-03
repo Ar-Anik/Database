@@ -1,0 +1,31 @@
+Q: What is UNION ALL?
+-> The UNION ALL operator is used to combine the result sets of two or more SELECT statements into a single result.
+Unlike UNION, UNION ALL does not remove duplicates — it keeps all rows.
+
+# Rules/Requirements for UNION ALL
+- Each SELECT must have the same number of columns.
+- The columns must have similar data types (e.g., INT with INT, VARCHAR with VARCHAR).
+- The columns must be in the same order in each SELECT.
+
+-> UNION ALL = combine + keep duplicates.
+-> Faster than UNION (because no duplicate check).
+-> Use when duplicates are allowed or needed.
+
+# Query-1
+SELECT City FROM Customers
+UNION ALL
+SELECT City FROM Suppliers
+ORDER BY City;
+
+# Query-2
+SELECT City, Country FROM Customers
+WHERE Country = 'Germany'
+UNION ALL
+SELECT City, Country FROM Suppliers
+WHERE Country = 'Germany'
+ORDER BY City;
+
+# Query-3
+SELECT 'Customer' As Type, City, Country FROM Customers
+UNION ALL
+SELECT 'Supplier', City, Country FROM Suppliers;

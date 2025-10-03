@@ -1,0 +1,62 @@
+Link : https://vertabelo.com/blog/one-to-one-relationship-in-database/
+
+Q: What is a One-to-One Relationship?
+-> A One-to-One (1:1) relationship means that each row in Table A is related to at most one row in Table B, and
+vice versa. In other words, one entity corresponds to exactly one other entity.
+
+# Example in real life:
+- Person ↔ Passport → One person has one passport, and each passport belongs to one person.
+- User ↔ UserProfile → Each user has at most one profile, and each profile belongs to one user.
+
+So, in database terms, primary key of one table corresponds to at most one row in another table.
+
+
+Q : How Many Ways Can We Implement One-to-One in RDBMS?
+- There are mainly 3 common approaches to implement a 1:1 relationship in relational databases.
+
+(A) Primary Key = Foreign Key
+- The most strict and clean method. The child table uses the same primary key as the parent table.
+- Guarantees exactly one-to-one because user_id is both PK and FK.
+
+CREATE TABLE User (
+    user_id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE UserProfile (
+    user_id INT PRIMARY KEY,
+    address VARCHAR(200),
+    phone VARCHAR(20),
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+Here, UserProfile.user_id is PK + FK, so one profile can belong to only one user.
+
+
+(B) Unique Foreign Key
+- The child table’s foreign key is marked as UNIQUE.
+- It prevents multiple rows in the child from referencing the same parent row.
+
+CREATE TABLE User (
+    user_id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE UserSettings (
+    settings_id INT PRIMARY KEY,
+    user_id INT UNIQUE,
+    theme VARCHAR(50),
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+Here, user_id is UNIQUE, so each user can only have one settings record.
+
+(C) Shared Table (Optional Columns)
+- Sometimes implemented by keeping optional columns in the same table.
+- But this leads to lots of NULL values and is usually avoided.
+Example: User table with optional theme_color and auto_login columns.
+
+This is technically still one-to-one but less normalized.
+
+
+# ER Diagram Symbol (1:1) : Student |───| StudentProfile

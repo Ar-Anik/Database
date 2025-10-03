@@ -23,3 +23,16 @@ one match.
 
 * Typically used in correlated subqueries (where subquery refers to outer query columns). Here before
 where keyword is outer query and after exists is subquery.
+
+
+# Query-1
+SELECT name FROM Suppliers
+WHERE EXISTS(SELECT name FROM Products
+WHERE Products.supplier_id = Suppliers.id
+AND Products.price < 20);
+
+# Query-2
+SELECT name FROM Suppliers
+WHERE EXISTS(SELECT name FROM Products
+WHERE Products.supplier_id = Suppliers.id
+AND Products.price = 200);

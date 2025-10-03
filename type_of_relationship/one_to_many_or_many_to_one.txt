@@ -1,0 +1,95 @@
+Link : https://vertabelo.com/blog/one-to-many-relationship/
+
+Q : What is a One-to-Many Relationship?
+-> A One-to-Many (1:N) relationship in a relational database is a relationship between two entities (tables) where a
+single record in the first table (the "one" side) can be associated with multiple records in the second table (the "many"
+side), but each record in the second table is associated with only one record in the first table.
+
+# Example :
+-> Authors Table
+----------------------
+| AuthorID | Name    |
+| -------- | ------- |
+| 1        | Alice   |
+| 2        | Bob     |
+| 3        | Charlie |
+----------------------
+
+-> Books Table
+--------------------------------------------
+| BookID | Title                | AuthorID |
+| ------ | -------------------- | -------- |
+| 1      | Database Design      | 1        |
+| 2      | SQL for Beginners    | 1        |
+| 3      | Advanced SQL         | 2        |
+| 4      | Python and Databases | 2        |
+| 5      | AI and Databases     | 3        |
+--------------------------------------------
+
+Here,
+- Author Alice (AuthorID = 1) has two books: Database Design and SQL for Beginners.
+- Author Bob (AuthorID = 2) has two books: Advanced SQL and Python and Databases.
+- Author Charlie (AuthorID = 3) has one book: AI and Databases.
+One record in Authors → many records in Books.
+
+
+Q: How Many Ways Can We Implement One-to-Many Relationship in RDBMS?
+
+1. Using Foreign Key in the “Many” Table (Standard & Best Practice)
+- Add a foreign key in the child (many) table that references the primary key of the parent (one) table. This is the
+most common and recommended way.
+
+# Example
+CREATE TABLE Authors (
+    AuthorID INT PRIMARY KEY,
+    Name VARCHAR(100)
+);
+
+CREATE TABLE Books (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(200),
+    AuthorID INT,
+    FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
+);
+
+- One author → Many books
+- Enforces referential integrity automatically.
+
+
+2. Using an Associative (Join) Table
+- Create a separate mapping table that links the parent and child.
+- More often used for Many-to-Many, but can also represent One-to-Many if needed (e.g. when storing extra relationship info).
+
+# Example
+CREATE TABLE AuthorBookMap (
+    AuthorID INT,
+    BookID INT,
+    PRIMARY KEY (AuthorID, BookID),
+    FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID),
+    FOREIGN KEY (BookID) REFERENCES Books(BookID)
+);
+
+- Useful if we need additional details like AssignedDate or ContributionType.
+- Slightly more complex than direct foreign key.
+
+
+3. Using Serialized / Nested Data in One Column (Not Recommended in RDBMS)
+- Store multiple child references in a single column (e.g., CSV, JSON).
+Example: Authors(BookIDs = '1,2,3').
+
+# Example :
+CREATE TABLE Authors (
+    AuthorID INT PRIMARY KEY,
+    Name VARCHAR(100),
+    BookIDs VARCHAR(100)  -- e.g. "1,2,3"
+);
+
+# Downsides of Nested Data:
+- Breaks normalization.
+- Hard to query (LIKE '%2%' for finding Book 2).
+- Not scalable for large datasets.
+
+Sometimes used in NoSQL databases, but discouraged in RDBMS.
+
+
+# ER Diagram Symbol (1:N) : Department |───< Employee

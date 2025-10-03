@@ -1,4 +1,4 @@
-# GROUP BY rules, requiring that, Every column in the SELECT list must either:
+# GROUP BY rules requiring that, Every column in the SELECT list must either:
     * Be included in the GROUP BY clause
     * OR be inside an aggregate function like SUM(), COUNT(), MAX(), etc.
 
@@ -14,3 +14,30 @@ Group together all rows that have the same values in all of these columns. for e
     * Use aggregate functions (COUNT(), SUM(), AVG(), etc.)
     * Return one row per group
 
+
+-> GROUP BY with Multiple Columns in MySQL
+- When we use one column in GROUP BY, MySQL groups rows based on unique values of that column.
+- When we use multiple columns in GROUP BY, MySQL groups rows based on the unique combination of values across all
+those columns.
+
+# In other words:
+- GROUP BY col1 → groups by each distinct col1.
+- GROUP BY col1, col2 → groups by each distinct pair (col1, col2).
+- GROUP BY col1, col2, col3 → groups by each distinct triple (col1, col2, col3).
+
+
+# Query-1
+SELECT COUNT(CustomerID), Country
+FROM Customers
+GROUP BY Country;
+
+# Query-2
+SELECT COUNT(CustomerID) as CusterNum, Country
+FROM Customers
+GROUP BY Country
+ORDER BY CusterNum DESC;
+
+# Query-3
+SELECT City, PostalCode, Country, COUNT(*) as Number
+FROM Customers
+GROUP BY City, PostalCode, Country;

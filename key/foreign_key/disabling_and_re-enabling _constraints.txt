@@ -1,0 +1,72 @@
+Mind That In MySQL (and most relational databases):
+- A session = one active connection between our client (console, app, driver etc.) and the database server.
+- If we open one MySQL console window (e.g. by running mysql -u root -p), that’s one session.
+- If we open another console window and connect again, that’s a second independent session.
+
+-> On massive inserts, disabling and re-enabling constraints can boost performance:
+
+-- Session Level Disable Constraints
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Session Level Enable Constraints
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Global Level Disable Constraints
+SET GLOBAL FOREIGN_KEY_CHECKS = 0;
+
+-- Global Level Enable Constraints
+SET GLOBAL FOREIGN_KEY_CHECKS = 1;
+
+1. What It Does?
+- FOREIGN_KEY_CHECKS is a global or session-level system variable in MySQL. When set to 0, MySQL does not enforce
+foreign key constraints during INSERT, UPDATE, or DELETE. When set back to 1, enforcement resumes.
+
+- In other words, MySQL skips referential integrity checks while the flag is off.
+
+# Session Level
+SET SESSION FOREIGN_KEY_CHECKS = 0;
+
+- Applies only to the current client connection (worker session).
+- Once we disconnect or start a new session, it resets to the default (1).
+- Other sessions (workers) are not affected.
+- Use case: We want to do a bulk insert or migration in just our session without affecting other running queries
+in the system.
+
+# Example :
+-- Only Our session will ignore FK checks
+SET SESSION FOREIGN_KEY_CHECKS = 0;
+
+INSERT INTO orders (order_id, customer_id) VALUES (100, 999); -- even if 999 doesn’t exist in customers
+
+SET SESSION FOREIGN_KEY_CHECKS = 1; -- re-enable
+
+
+# Global-level (GLOBAL scope)
+SET GLOBAL FOREIGN_KEY_CHECKS = 0;
+
+- Applies to all sessions (all workers), but only for new connections created after the change.
+- Existing sessions keep their own current setting (unless explicitly reset).
+- Requires SUPER or SYSTEM_VARIABLES_ADMIN privilege.
+- Use case: Admin wants to disable foreign key checks system-wide for a batch operation, data import or schema migration.
+
+# Example :
+-- Disable for the whole server
+SET GLOBAL FOREIGN_KEY_CHECKS = 0;
+
+-- All new sessions opened AFTER this command will ignore FK checks
+-- Existing ones won’t change unless they also run SET SESSION.
+
+-- Later, re-enable globally
+SET GLOBAL FOREIGN_KEY_CHECKS = 1;
+
+
+Q : Why It Boosts Performance?
+-> Normally, during each insert/update:
+- MySQL checks if the child row’s FK exists in the parent table.
+- MySQL checks if deleting/updating the parent breaks child rows.
+- This means extra lookups and index validations for every row.
+
+-> When you disable checks (FOREIGN_KEY_CHECKS = 0):
+- MySQL skips these validations, allowing raw inserts without overhead.
+- This can massively improve bulk insert or migration speed, especially with millions of rows.
+

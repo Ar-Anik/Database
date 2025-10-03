@@ -10,7 +10,6 @@ WHERE condition
 GROUP BY column1
 HAVING aggregate_condition;
 
-Q : Why Use HAVING Instead of WHERE?
 -> We cannot use aggregate functions in WHERE, so the following will fail:
 ----------- Show Error ---------------
     SELECT region, SUM(sales)
@@ -20,6 +19,42 @@ Q : Why Use HAVING Instead of WHERE?
 ---------------------------------------
 This gives an error because WHERE doesn’t recognize SUM(sales) (it's not computed yet).
 
+Q: Why WHERE cannot be used with Aggregate Functions?
+1. Execution order in MySQL
+The reason is about how MySQL executes a query. Order of execution (simplified):
+    1. FROM → take tables.
+    2. WHERE → filter rows (before grouping).
+    3. GROUP BY → group the remaining rows.
+    4. Aggregate functions (SUM, COUNT, AVG, etc.) are calculated.
+    5. HAVING → filter groups based on aggregate results.
+    6. SELECT → return final columns.
+    7. ORDER BY → sort results.
+
+2. WHERE vs HAVING
+- WHERE works on individual rows (before grouping).
+- Aggregate functions like SUM(), AVG(), COUNT() are calculated after grouping.
+- That’s why WHERE cannot use aggregates — the aggregates don’t exist yet when WHERE is applied.
+
+
 -> The HAVING clause works on either:
     1. Aggregate functions (e.g., SUM(), COUNT(), AVG(), etc.)
     2. Columns used in the GROUP BY clause
+
+
+# Query-1
+SELECT Count(CustomerID), Country
+FROM Customers
+GROUP BY Country
+HAVING COUNT(CustomerID) >= 2;
+
+# Query-2
+SELECT COUNT(CustomerID) As CusNum, Country
+FROM Customers
+GROUP BY Country
+HAVING CusNum >= 2
+ORDER BY CusNum DESC;
+
+# Query-3
+SELECT SUM(Amount) as TotalAmount
+From Sales
+HAVING TotalAmount > 2000;

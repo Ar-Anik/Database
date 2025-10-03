@@ -1,0 +1,15 @@
+# CONCAT_WS = Concatenate With Separator.
+
+# Syntax : CONCAT_WS(separator, str1, str2, str3, ...)
+- separator → the string to put between each part (e.g. ', ' or ' - ').
+- str1, str2, ... → the values we want to join together.
+
+# Query
+SELECT CustomerName, CONCAT_WS('-', Address, PostalCode, City, Country) as Address FROM Customers;
+
+# Special Note :
+1. CONCAT() will return NULL if any argument is NULL.
+- Example: CONCAT('A', NULL, 'B') → NULL
+
+2. CONCAT_WS() ignores NULL values instead of failing.
+- Example: CONCAT_WS(', ', 'A', NULL, 'B') → 'A, B'

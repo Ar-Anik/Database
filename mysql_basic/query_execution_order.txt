@@ -5,17 +5,20 @@
     Filters rows from the intermediate result created by FROM. Only rows satisfying the condition remain.
 3. GROUP BY
     Groups remaining rows by one or more columns.
-4. HAVING
+
+4. Aggregate functions (SUM, COUNT, AVG, etc.) are calculated.
+
+5. HAVING
     Filters the grouped results (not individual rows). It applies conditions on aggregate functions like COUNT, SUM, etc.
-5. SELECT
+6. SELECT
     Chooses and computes the final columns to be returned (including aggregate functions, aliases, expressions).
-6. ORDER BY
+7. ORDER BY
     Sorts the final result rows. We can order by columns, aliases, or expressions.
-7. LIMIT
+8. LIMIT
     Restricts the number of rows returned to the client.
 
 -> The Sequence :
-    FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT
+    FROM → WHERE → GROUP BY → Aggregate Functions → HAVING → SELECT → ORDER BY → LIMIT
 
 -> Special Note :
     1. FROM includes joins, subqueries, and table aliases.

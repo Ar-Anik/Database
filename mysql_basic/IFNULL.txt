@@ -1,0 +1,22 @@
+Link : https://www.w3schools.com/mysql/mysql_ifnull.asp
+
+# Table Query
+-- Create the table
+CREATE TABLE Products (
+    P_Id INT PRIMARY KEY,
+    ProductName VARCHAR(50) NOT NULL,
+    UnitPrice DECIMAL(10,2) NOT NULL,
+    UnitsInStock INT NOT NULL,
+    UnitsOnOrder INT  -- Can be NULL
+);
+
+-- Insert sample data
+INSERT INTO Products (P_Id, ProductName, UnitPrice, UnitsInStock, UnitsOnOrder)
+VALUES
+(1, 'Jarlsberg', 10.45, 16, 15),
+(2, 'Mascarpone', 32.56, 23, NULL),
+(3, 'Gorgonzola', 15.67, 9, 20);
+
+# Query-1
+SELECT ProductName, UnitPrice * (UnitsInStock + IFNULL(UnitsInStock, 0))
+FROM Products;

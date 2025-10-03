@@ -1,0 +1,105 @@
+-> Foreign key constraints let us allow for define what happens when parent data changes:
+ON DELETE and ON UPDATE options:
+
+-- Parent Table
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(100)
+) ENGINE=InnoDB;
+
+1. CASCADE
+If a parent row is deleted or updated → same effect cascades to child rows.
+
+-- Child Table
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- Insert Data
+INSERT INTO departments VALUES (1, 'HR'), (2, 'Finance');
+INSERT INTO employees VALUES (101, 'Alice', 1), (102, 'Bob', 2);
+
+-- If we delete department 1 → Alice (emp_id=101) also gets deleted
+DELETE FROM departments WHERE dept_id = 1;
+
+-- If we update dept_id = 2 → Bob’s dept_id updates automatically
+UPDATE departments SET dept_id = 20 WHERE dept_id = 2;
+
+
+2. If a parent row is deleted or updated, child column becomes NULL. Works only if child FK column allows NULL.
+
+-- Child Table
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    dept_id INT NULL,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+        ON DELETE SET NULL
+        ON UPDATE SET NULL
+) ENGINE=InnoDB;
+
+-- Insert Data
+INSERT INTO departments VALUES (1, 'HR'), (2, 'Finance');
+INSERT INTO employees VALUES (201, 'John', 1), (202, 'Mary', 2);
+
+-- Delete department 1 → John's dept_id becomes NULL
+DELETE FROM departments WHERE dept_id = 1;
+
+-- Update department 2 → Mary’s dept_id becomes NULL
+UPDATE departments SET dept_id = 22 WHERE dept_id = 2;
+
+
+3. RESTRICT (Default)
+Prevents deleting or updating parent rows if child rows exist. It's Mysql Default Behaviour.
+
+-- Child Table
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
+) ENGINE=InnoDB;
+
+-- Insert Data
+INSERT INTO departments VALUES (1, 'HR');
+INSERT INTO employees VALUES (301, 'Mike', 1);
+
+-- This will FAIL (cannot delete department with employees)
+DELETE FROM departments WHERE dept_id = 1;
+
+-- This will also FAIL (cannot update department id while employees exist)
+UPDATE departments SET dept_id = 10 WHERE dept_id = 1;
+
+
+4. NO ACTION
+Behaves the same as RESTRICT in MySQL (immediate enforcement).
+
+-- Child Table
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+) ENGINE=InnoDB;
+
+-- Insert Data
+INSERT INTO departments VALUES (1, 'HR');
+INSERT INTO employees VALUES (401, 'Sarah', 1);
+
+-- Delete → FAIL (same as RESTRICT)
+DELETE FROM departments WHERE dept_id = 1;
+
+-- Update → FAIL (same as RESTRICT)
+UPDATE departments SET dept_id = 11 WHERE dept_id = 1;
+
+
+5. SET DEFAULT -> Not Supported in MySQL

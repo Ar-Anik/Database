@@ -1,0 +1,14 @@
+-> If we want to select records 4 - 6 (inclusive), MySQL provides a way to handle this, by using OFFSET.
+The MySQL query below says "return only 3 records, start on record 4 (OFFSET 3)":
+
+SELECT *
+FROM Customers
+WHERE Country='Bangladesh'
+LIMIT 3 OFFSET 3;
+
+-> Since SQL tables don’t have an inherent row order, the result may not be deterministic unless we use ORDER BY.
+SELECT *
+FROM Customers
+WHERE Country = 'Bangladesh'
+ORDER BY CustomerID
+LIMIT 3 OFFSET 3;

@@ -1,0 +1,95 @@
+Link : https://vertabelo.com/blog/many-to-many-relationship/
+
+Q: What is a Many-to-Many Relationship?
+- In Relational Database Management Systems (RDBMS) a many-to-many (M:N) relationship occurs when multiple records in
+one table are associated with multiple records in another table.
+
+# Example in real life, Students and Courses :
+- A student can enroll in many courses.
+- A course can have many students.
+
+If we try to model this directly, we’ll face data redundancy and complexity because one table alone cannot efficiently
+store such relationships.
+
+
+Q: How Many Ways Can We Resolve Many-to-Many Relationships in RDBMS?
+
+Way 1: Using a Junction (Bridge/Associative) Table with Surrogate Key
+- Create a new junction table that holds relationships.
+- The table has its own primary key (often auto-increment).
+- It contains foreign keys referencing both parent tables.
+
+# Example
+-- Students Table
+CREATE TABLE Students (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100)
+);
+
+-- Courses Table
+CREATE TABLE Courses (
+    course_id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100)
+);
+
+-- Junction Table with Surrogate Key
+CREATE TABLE StudentCourses (
+    id INT PRIMARY KEY AUTO_INCREMENT, -- surrogate key
+    student_id INT,
+    course_id INT,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+);
+
+- Easy to extend with extra attributes (e.g., enrollment_date, grade).
+- Cleaner design when dealing with large systems.
+
+
+Way 2: Using a Junction Table with Composite Primary Key
+- Instead of a new surrogate key, use the combination of foreign keys as the primary key.
+- This ensures uniqueness of the pair.
+
+-- Junction Table with Composite Primary Key
+CREATE TABLE StudentCourses (
+    student_id INT,
+    course_id INT,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+);
+
+- No extra ID field needed.
+- Ensures uniqueness automatically.
+- Simpler for small/medium relationships.
+
+
+
+-> Suppose we have 3 Table with many to many relationship :
+CREATE TABLE Students (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_name VARCHAR(100)
+);
+
+CREATE TABLE Courses (
+    course_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_title VARCHAR(100)
+);
+
+CREATE TABLE Professors (
+    professor_id INT PRIMARY KEY AUTO_INCREMENT,
+    professor_name VARCHAR(100)
+);
+
+-- Junction Table
+CREATE TABLE StudentCourseProfessors (
+    student_id INT,
+    course_id INT,
+    professor_id INT,
+    PRIMARY KEY (student_id, course_id, professor_id),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id),
+    FOREIGN KEY (professor_id) REFERENCES Professors(professor_id)
+);
+
+
+# ER Diagram Symbol (M:N) : Student >───< Course

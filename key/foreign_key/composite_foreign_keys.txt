@@ -1,0 +1,9 @@
+-> A foreign key can reference multiple columns. It also called Multi-Column Foreign Key.
+
+CREATE TABLE order_details (
+  order_id INT,
+  product_id INT,
+  quantity INT,
+  PRIMARY KEY (order_id, product_id),
+  FOREIGN KEY (order_id, product_id) REFERENCES orders(id, product_id)
+);

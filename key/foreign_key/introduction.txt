@@ -1,0 +1,81 @@
+1. What is a Foreign Key?
+-> A foreign key (FK) is a field (or set of fields) in one table that references the primary key (or unique key) of
+another table. It establishes a parent–child relationship:
+    - Parent table → contains the primary key being referenced.
+    - Child table → contains the foreign key column(s).
+This ensures that values in the foreign key column must exist in the referenced column of the parent table.
+
+# Example-1
+CREATE TABLE `O1` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `orderNumber` INT NOT NULL,
+    `person_id` INT,
+    FOREIGN KEY (person_id) REFERENCES P1(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# Example-2
+ALTER TABLE `O1` ADD FOREIGN KEY (person_id) REFERENCES P1(id);
+
+
+Q : What is Foreign Key Constraint?
+-> A foreign key constraint is the rule enforced by MySQL to ensure:
+- We cannot insert a child row unless the referenced parent exists.
+- We cannot delete/update a parent row if children exist (unless explicitly allowed with ON DELETE / ON UPDATE actions).
+
+- Only InnoDB supports FK constraints. If parent table is InnoDB, child must also be InnoDB.
+- MyISAM ignores constraints (syntax accepted but not enforced).
+
+# Example-1
+CREATE TABLE `O1` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `orderNumber` INT NOT NULL,
+    `person_id` INT,
+    CONSTRAINT FK_PersonOrder FOREIGN KEY (person_id) REFERENCES P1(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# Example-2
+ALTER TABLE `O1` ADD CONSTRAINT FK_PersonOrder FOREIGN KEY (person_id) REFERENCES P1(id);
+
+-> We can also Drop Foreign key
+ALTER TABLE Child DROP FOREIGN KEY fk_parent;
+
+
+-> MySQL automatically creates an index on foreign key columns if none exists.
+
+-> Large FK relationships can cause locking overhead in InnoDB.
+- When we use InnoDB (the only engine in MySQL that supports FKs) every insert, update or delete involving a
+foreign key requires referential integrity checks. For Example :
+    INSERT INTO child (parent_id) VALUES (10);
+Above insert query, InnoDB must lookup parent(10) in the parent table. It places a shared lock (S-lock) on that
+parent row to ensure it exists and doesn’t get deleted before the insert finishes.
+
+Similarly, DELETE FROM parent WHERE id = 10;
+InnoDB must check all child tables that reference parent(id) to ensure there are no dependent rows (or apply
+cascading). It may need to lock the entire child index range for parent_id = 10.
+
+So, This means foreign key checks = extra lookups + extra locks.
+
+-> Avoid "too many" foreign keys in highly transactional systems, can cause contention.
+# Insert/Update with Foreign Keys
+- Each child insert must lock the parent row thats why need extra index lookups & locks. With millions of inserts/sec,
+these checks become a bottleneck.
+
+# Delete/Update Parent
+If a parent has many children, DELETE parent may scan the entire child index to enforce the constraint. Locks on
+many child rows it may lead contention if other transactions are reading/writing those rows.
+
+
+-> When multiple transactions compete for FK-related rows:
+1. Deadlocks Raise:
+- Tx1 inserts child with parent_id=10 → locks parent(10).
+- Tx2 deletes parent(10) → waits for Tx1.
+- Circular waits → deadlock.
+
+2. Gap Locks Raise:
+- InnoDB uses next-key locks (row + gap) when checking FK existence.
+- This can block inserts on nearby rows, even if unrelated.
+
+3. Index Hotspots Create:
+- All child inserts need to lookup the same parent PK index.
+- Parent rows with many children become hotspots (e.g., a “root” account, global config, etc.).
+

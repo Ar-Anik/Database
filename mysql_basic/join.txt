@@ -9,10 +9,18 @@ In mysql 4 type of join exist :
 -> Basic Traversal Logic: In a Mysql JOIN, the database engine compares each row from the left table with rows from the
 right table based on the ON condition. If matches are found, a combined row is created in the result. If multiple matches
 are found, multiple result rows are generated. If no match is found:
-    1. INNER JOIN : Row is discarded.
-    2. LEFT JOIN : Row is included with NULL values for the right side.
-    3. RIGHT JOIN : Row from right table is included, left side is filled with NULL
-    4. CROSS JOIN : All combinations are included — no matching condition is used at all
+    1. INNER JOIN : Selects records that have matching values in both tables.
+
+    2. LEFT JOIN : The LEFT JOIN keyword returns all records from the left table, and the matching records (if any)
+       from the right table. The LEFT JOIN keyword returns all records from the left table, even if there are
+       no matches in the right table.
+
+    3. RIGHT JOIN : The RIGHT JOIN keyword returns all records from the right table, and the matching records (if
+       any) from the left table. The RIGHT JOIN keyword returns all records from the right table, even if there are
+       no matches in the left table.
+
+    4. CROSS JOIN : CROSS JOIN keyword returns all records from both tables. If we add a WHERE clause, the CROSS JOIN
+       will produce the same result as the INNER JOIN clause.
 
 -> Join Think of it as:
   for each row in Table_A:

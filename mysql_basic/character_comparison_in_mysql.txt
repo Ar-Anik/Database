@@ -1,0 +1,41 @@
+Character Comparison in MySQL (Lexicographic Order)
+
+1. Strings are compared left to right
+- MySQL compares text one character at a time.
+- As soon as it finds a difference, the comparison result is decided.
+- If all compared characters are equal but one string is shorter → the shorter string is considered smaller.
+
+2. Alphabetical / Dictionary Order
+- Think of words in a dictionary:
+    Apple < Banana < Carrot < Cherry < Date < Fig < Grape
+That’s exactly how MySQL orders text.
+
+# Example 1: "Banana" vs "Carrot"
+- Compare first letters: B vs C
+- Since B < C, "Banana" < "Carrot"
+- Result: "Banana" comes first.
+
+# Example 2: "Carrot" vs "Cherry"
+- First char: C = C (equal)
+- Second char: a vs h → since a < h, stop here. "Carrot" < "Cherry"
+- Result: "Carrot" comes before "Cherry".
+
+# Example 3: "Cat" vs "Caterpillar"
+- First 3 chars: Cat = Cat (equal)
+- One string ends (Cat), the other continues (Caterpillar)
+- The shorter string is smaller.
+- Result: "Cat" < "Caterpillar"
+
+
+-> Special Notes
+- Comparisons depend on collation (e.g., case-sensitive or case-insensitive).
+- By default in MySQL: "apple" = "Apple" (case-insensitive).
+- If case-sensitive collation is used:
+ 'Zebra' < 'apple' (because uppercase Z has lower ASCII value than lowercase a).
+
+
+# BETWEEN For Text Comparison
+    SELECT * FROM Products WHERE ProductName BETWEEN 'Banana' AND 'Date';
+
+# NOT BETWEEN For Text Comparison
+    SELECT * FROM Products WHERE ProductName NOT BETWEEN 'Banana' AND 'Date';
