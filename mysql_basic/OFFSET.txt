@@ -12,3 +12,7 @@ FROM Customers
 WHERE Country = 'Bangladesh'
 ORDER BY CustomerID
 LIMIT 3 OFFSET 3;
+
+-> This query retrieves 10 rows from the products table, skipping the first 5 rows.
+SELECT * FROM products
+LIMIT 10 OFFSET 5;
