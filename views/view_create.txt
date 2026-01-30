@@ -1,0 +1,33 @@
+SQL-এ view তৈরি করার জন্য create view কমান্ড ব্যবহার করা হয়। একটি view define করার সময় প্রধানত
+1. view-টির একটি নির্দিষ্ট নাম দিতে হয়।
+2. একটি Query প্রদান করতে হয় যা view-টির ফলাফল নির্ধারণ করবে।
+
+view তৈরির Syntax:
+    create view v as <query expression>;
+এখানে v হলো view-টির নাম এবং <query expression> হলো যেকোনো legal SQL কুয়েরি।
+
+introduction.py-এর সেই কেরানির উদাহরণটি আবার বিবেচনা করা যাক যার instructor রিলেশনের(table) সব তথ্য প্রয়োজন কিন্তু salary দেখার অনুমতি
+নেই। নিরাপত্তার স্বার্থে ওই কেরানি-কে সরাসরি মূল instructor table ব্যবহারের অনুমতি দেওয়া হবে না। এর পরিবর্তে কেরানির জন্য faculty নামে একটি view
+তৈরি করা যেতে পারে:
+    create view faculty as
+    select ID, name, dept_name
+    from instructor;
+
+view relation-টি conceptually কুয়েরির ফলাফল বা tuples-গুলোকে নিজের মধ্যে রাখে কিন্তু এগুলো ডাটাবেসে আগে থেকে গণনা করে বা স্থায়ীভাবে জমা
+করে রাখা হয় না। database system শুধুমাত্র view-টির সাথে যুক্ত Query expression জমা রাখে।
+
+যখনই কেউ এই faculty view-টি ব্যবহার করার চেষ্টা করে বা এক্সেস করে তখনই ডাটাবেস সিস্টেম ওই মুহূর্তে কুয়েরিটি চালায় এবং টাপলগুলো তৈরি করে। অর্থাৎ এই
+view relation-টি যখনই প্রয়োজন হয় ঠিক তখনই বা On demand তৈরি করা হয়।
+
+Physics ডিপার্টমেন্টের ২০০৯ সালের 'Fall' সেমিস্টারে কোন কোন কোর্সের সেকশন অফার করা হয়েছে এবং সেগুলোর বিল্ডিং ও রুম নম্বর কী—তার একটি list তৈরি
+করতে নিচের view-টি ব্যবহার করা হয়:
+    create view physics_fall_2009 as
+    select course.course_id, sec_id, building, room_number
+    from course, section
+    where course.course_id = section.course_id
+    and course.dept_name = 'Physics'
+    and section.semester = 'Fall'
+    and section.year = '2009';
+
+এখানে physics_fall_2009 হলো view-টির নাম। যখনই কেউ এই নামে কুয়েরি করবে ডাটাবেস স্বয়ংক্রিয়ভাবে course এবং section টেবিল থেকে প্রয়োজনীয়
+তথ্যগুলো খুঁজে বের করে আনবে।

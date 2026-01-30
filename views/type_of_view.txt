@@ -1,0 +1,87 @@
+-> Type of View :
+# Below all query for SQL
+
+1. Simple View
+A Simple View is the most basic form of a view. It is derived from a single table and acts as a filter or a subset of
+that table.
+
+# Key Characteristics:
+- Contains only one base table.
+- Does not contain functions (like SUM(), AVG()) or the GROUP BY clause.
+- DML Operations: Data Manipulation Language (DML) operations like INSERT, UPDATE, and DELETE are generally possible
+through a simple view, and the changes are reflected in the base table.
+
+Example:
+If there is a table named Employees a simple view can be created to show only the names and departments of employees
+in the 'Sales' department.
+
+CREATE VIEW Sales_Employees AS
+SELECT EmployeeID, Name, Department
+FROM Employees
+WHERE Department = 'Sales';
+
+
+2. Complex View
+A Complex View is built upon multiple tables or contains advanced SQL logic. It is used to present a unified look at data that is logically spread across different parts of the database.
+
+# Key Characteristics:
+- Derived from two or more tables (using JOIN).
+- Can contain functions (COUNT, MAX, etc.) and the GROUP BY clause.
+- DML Operations: Usually, DML operations are not allowed directly on complex views because the database engine cannot always map a change in the view back to a specific row in the multiple underlying tables.
+
+Example:
+Combining the Employees table and the Departments table to show the total salary spent per department.
+
+CREATE VIEW Dept_Salary_Summary AS
+SLECT d.name, SUM(e.salary) AS TotalSalary
+FROM Employees e
+JOIN Department d ON e.dept_id = d.id
+GROUP BY d.name;
+
+
+3. Inline View
+An Inline View is a subquery used in the FROM clause of a SQL statement. There is no CREATE command used. Therefore
+the database does not save the definition of an inline view in its schema or data dictionary. It only exists while
+that specific SQL statement is running. Once the query provides the final result, the database "forgets" the inline
+view entirely.
+
+# Key Characteristics:
+- It creates a temporary table in memory.
+- It is used to simplify complex logic by breaking it into steps.
+- It is often used when an aggregate value is needed to filter or join against other data in the same query.
+
+Example:
+Finding employees who earn more than the average salary of their department. The subquery in the FROM clause acts as
+the inline view.
+
+SELECT e.Name, e.Salary, t.AvgSalary
+FROM Employees e,
+     (SELECT DeptID, AVG(Salary) AS AvgSalary
+      FROM Employees
+      GROUP BY DeptID) t
+WHERE e.DeptID = t.DeptID
+AND e.Salary > t.AvgSalary;
+
+
+4. Materialized View
+A Materialized View is a physical copy of the data returned by the view's query. Unlike standard views, which run the
+query every time they are accessed, a materialized view stores the result set on the disk.
+
+# Key Characteristics:
+- Physical Storage: It stores both the definition and the actual data.
+- Performance: Extremely fast for complex calculations on large datasets because the result is pre-computed.
+- Refresh: Since the data is a snapshot, it must be "refreshed" (manually or automatically) to stay in sync with the base tables.
+- Commonly used in Data Warehousing and Business Intelligence.
+
+Example:
+Creating a materialized view for a massive sales report that only needs to be updated once a day.
+
+CREATE MATERIALIZED VIEW daily_sales_report
+BUILD IMMEDIATE         # Populate data during creation.
+REFRESH COMPLETE        # Refresh by re-running the whole query (Total reload).
+ON DEMAND AS            # Refresh only when manually requested.
+SELECT product_id as PID, SUM(quantity) AS TotalSold, sale_date as SaleDate
+FROM Orders
+GROUP BY product_id, sale_date
+
+Note : Standard MySQL does not natively support Materialized Views.

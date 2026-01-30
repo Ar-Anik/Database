@@ -5,7 +5,7 @@ statement) ends. By default, MySQL uses a semicolon (;) as the statement delimit
 Example: SELECT * FROM employees;     --> Here, the ; tells MySQL that the query ends here.
 
 Q : Why do we need to change the delimiter?
-- When writing stored procedures, triggers, or functions, the SQL code often contains multiple ; inside the body (to separate statements).
+- When writing stored procedures, triggers or functions, the SQL code often contains multiple ; inside the body (to separate statements).
 - If MySQL still thinks ; means "end of the whole procedure," it will stop too early and cause errors.
 - To fix this, we temporarily change the delimiter to something else (commonly // or $$).
 

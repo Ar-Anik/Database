@@ -1,0 +1,77 @@
+Although MySQL Stored Functions and Stored Procedures look similar in syntax and both are created inside the database,
+they are not the same thing and should not be used interchangeably. They exist for different responsibilities in
+database design.
+
+1. Return Behavior
+# Stored Function:
+- Must return exactly one value
+- The return value has a fixed data type
+- The function cannot exist without a RETURN statement
+
+# Stored Procedure:
+- Does not return a value directly
+- It may return zero, one or many values using OUT or INOUT parameters
+- Its main goal is execution, not returning a value
+
+2. Usage Inside SQL Queries
+- A Function can be used inside SQL expressions, It Can appear in : SELECT, WHERE, JOIN, ORDER BY, GROUP BY
+Like : SELECT name, price, add_vat(price) AS final_price FROM products;
+
+- A Procedure cannot be used inside SELECT or WHERE. It must be executed using the CALL statement. It runs
+independently, not as part of a query expression.
+Like : CALL increase_price(3, 500);
+
+3. Purpose and Design Intent
+# A Stored Function is designed for:
+- Calculations
+- Deriving values
+- Business rules that return a single result
+- Reusable logic that behaves like UPPER(), ROUND(), NOW() (custom version)
+
+# A Stored Procedure is designed for:
+- Performing workflows
+- Executing multiple steps
+- Modifying data
+- Coordinating logic across tables
+
+4. Data Modification Rules
+# A Function:
+- Should not modify database state
+- Insert, update, delete are either restricted or strongly discouraged
+- Designed to be side-effect free
+
+# A Procedure:
+- Freely allowed to: INSERT, UPDATE, DELETE
+- Can manage transactions (START TRANSACTION, COMMIT, ROLLBACK)
+- Safe for multi-step data changes
+
+5. Execution Behavior
+# A Function:
+- Executed for every row when used in a SELECT
+- Can be called thousands of times in a single query
+- Must be lightweight and fast
+
+# A Procedure:
+- Executed once per CALL
+- Better for heavy logic and batch operations
+- Not tied to row-by-row execution
+
+6. Parameters and Outputs
+# A Function:
+- Accepts only input parameters
+- Always returns one value via RETURN
+- Cannot return multiple values
+
+# A Procedure:
+- Can use: IN parameters (input), OUT parameters (output), INOUT parameters (input + output)
+- Can return multiple values through variables
+
+7. Transaction Control
+# A Function:
+- Cannot control transactions
+- No COMMIT or ROLLBACK
+- Must remain atomic and predictable
+
+# A Procedure:
+- Can manage transactions
+- Suitable for financial operations, inventory updates, workflows

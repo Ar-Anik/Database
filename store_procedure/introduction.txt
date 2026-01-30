@@ -1,6 +1,6 @@
 Q : 1. What is a Stored Procedure?
 - A Stored Procedure is a precompiled set of SQL statements stored in the database that we can call by name.
-It helps us reuse logic, reduce code duplication, and improve performance (because MySQL caches execution plans).
+It helps us reuse logic, reduce code duplication and improve performance (because MySQL caches execution plans).
 It can accept parameters (input, output, or both) or have no parameters. It supports control structures (loops,
 conditions, cursors, etc.), making it behave like a small program inside MySQL.
 
@@ -90,3 +90,9 @@ Q :  Why use @variables here?
 - They exist only for current database session/connection.
 - We can assign values to them and use them later in queries.
 
+
+-> Drop Procedure
+# Syntax : DROP PROCEDURE procedure_name; or DROP PROCEDURE IF EXISTS procedure_name;
+
+- Case-1 : DROP PROCEDURE get_all_users;
+- Case-2 : DROP PROCEDURE IF EXISTS get_all_users;

@@ -1,0 +1,102 @@
+Q : What is a MySQL User Defined Function (Stored Function)?
+-> A Stored Function in MySQL is a reusable SQL function that returns a single value and can be used inside SELECT,
+WHERE, JOIN, ORDER BY etc. Like :
+                SELECT calculate_discount(price);
+
+
+# Syntax
+DELIMITER $$
+
+CREATE FUNCTION function_name(parameter_name datatype)
+RETURNS datatype
+DETERMINISTIC
+
+BEGIN
+    -- SQL Statements
+    RETURN value;
+END $$
+
+DELIMITER ;
+
+Q : What is DETERMINISTIC KeyWord?
+-> DETERMINISTIC means for the same input, the function will always return the same output.
+
+# Example of DETERMINISTIC function : f(x) = x * 2, it always give me same output for same input.
+f(10) → 20   (always)
+f(10) → 20   (never changes)
+
+So f(x) function is deterministic.
+
+# Example of NOT DETERMINISTIC function :
+NOW() → changes every second
+RAND() → changes every call
+UUID()
+
+MySQL needs DETERMINISTIC keyword Because MySQL uses binary logging, replication, query cache, optimizer etc.
+It must know “Can I trust this function to always produce the same result?”. This affects:
+- Replication safety
+- Query optimization
+- Caching decisions
+
+If we write DETERMINISTIC but use RETURN RAND()/NOW()/UUUID() in a function. Then this is logically wrong and may
+cause replication bugs or wrong results.
+
+For Non-deterministic function must be write :
+RETURNS INT
+NOT DETERMINISTIC
+
+-> A MySQL function can return any single datatype like:
+INT, DECIMAL, DOUBLE, VARCHAR, CHAR, DATE, DATETIME, JSON, TEXT etc.
+
+Example :
+- RETURNS INT
+- RETURNS VARCHAR(50)
+- RETURNS DECIMAL(10,2)
+- RETURNS DATE
+- RETURNS JSON
+
+Q : what if we need to return multiple values from a mysql function?
+# Option 1: Return JSON, Like :
+DELIMITER $$
+
+CREATE FUNCTION get_product_json(pid INT)
+RETURNS JSON
+DETERMINISTIC
+BEGIN
+    DECLARE p_name VARCHAR(50);
+    DECLARE p_price DECIMAL(10,2);
+
+    SELECT name, price
+    INTO p_name, p_price
+    FROM products
+    WHERE id = pid;
+
+    RETURN JSON_OBJECT(
+        'name', p_name,
+        'price', p_price
+    );
+END $$
+
+DELIMITER ;
+
+
+# Option 2: Return a formatted string Like :
+DELIMITER $$
+
+CREATE FUNCTION get_product_text(pid INT)
+RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+    DECLARE p_name VARCHAR(50);
+    DECLARE p_price DECIMAL(10,2);
+
+    SELECT name, price
+    INTO p_name, p_price
+    FROM products
+    WHERE id = pid;
+
+    RETURN CONCAT(p_name, ' : ', p_price);
+END $$
+
+DELIMITER ;
+

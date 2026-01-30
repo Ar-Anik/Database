@@ -1,0 +1,14 @@
+-- Function Start
+DELIMITER $$
+CREATE FUNCTION calc_area(length DOUBLE, width DOUBLE)
+RETURNS DOUBLE
+DETERMINISTIC
+BEGIN
+   RETURN length * width;
+END $$
+
+DELIMITER ;
+
+-- Function Use
+SELECT calc_area(10, 5) AS Area;
+SELECT calc_area(5, 5) AS Area;

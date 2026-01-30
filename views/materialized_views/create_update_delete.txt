@@ -1,0 +1,61 @@
+----------------All are in PostgreSQL----------------
+
+# For Practice we use sales table
+CREATE TABLE sales (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL,
+    product_name TEXT,
+    amount NUMERIC(10, 2) NOT NULL,
+    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO sales (product_id, product_name, amount) VALUES
+(10, 'Smartphone', 500.00),
+(10, 'Smartphone', 500.00),
+(20, 'Laptop', 1200.00),
+(20, 'Laptop', 1300.00),
+(30, 'Headphone', 50.00),
+(30, 'Headphone', 60.00),
+(30, 'Headphone', 40.00);
+
+
+1. CREATE MATERIALIZED VIEW
+
+# Syntax
+CREATE MATERIALIZED VIEW view_name AS
+SELECT column1, column2
+FROM table_name
+WHERE condition;
+
+- sales নামে একটি টেবিল আছে। সেখান থেকে প্রতিদিনের total sale calculate করে একটি view তৈরি করা হচ্ছে:
+create materialized view monthly_report as
+select product_id, sum(amount) as total_revenue
+from sales
+group by product_id;
+
+এই query run করার সাথে সাথে monthly_report নামক একটি object তৈরি হবে যা ডেটাগুলো নিজের মধ্যে save করে রাখবে।
+
+
+2. ALTER MATERIALIZED VIEW
+MATERIALIZED ভিউয়ের name change, user permission change বা schema change করতে এটি ব্যবহৃত হয়।
+
+- Name Change : alter materialized view monthly_report rename to annual_report;
+
+- user permission change : ALTER MATERIALIZED VIEW monthly_report OWNER TO new_root;
+
+PostgreSQL-এ একটি MATERIALIZED VIEW create করার পর সেটির query সরাসরি ALTER command দিয়ে change করা যায় না।
+যদি query পরিবর্তন করার প্রয়োজন হয় তবে view DROP করে আবার নতুন query দিয়ে CREATE করতে হবে।
+
+
+3. DROP MATERIALIZED VIEW
+# Syntax : DROP MATERIALIZED VIEW view_name;
+
+- Drop MATERIALIZED VIEW :  DROP materialized view monthly_report;
+
+# use CASCADE : suppose 2 টি object আছে:
+- monthly_report
+- yearly_report (এটি তৈরি করা হয়েছে monthly_report এর ওপর base করে)
+
+এখন যদি DROP MATERIALIZED VIEW monthly_report command run করি তবে PostgreSQL একটি Error দেবে। এটি বলবে যে "yearly_report", "monthly_report" এর ওপর নির্ভরশীল তাই এটি delete করা যাবে না।
+এই error solve করার জন্য run করতে হবে : DROP MATERIALIZED VIEW monthly_report CASCADE;
+CASCADE keyword দেখার পর PostgreSQL, প্রথমে monthly_report delete করবে। এরপর এর ওপর নির্ভরশীল yearly_report-কেও automatic delete করে দেবে।

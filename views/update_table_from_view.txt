@@ -1,0 +1,105 @@
+Database কুয়েরির ক্ষেত্রে View অত্যন্ত কার্যকর হলেও এর মাধ্যমে data Update, Insert, Delete করার ক্ষেত্রে বেশ কিছু complexity দেখা দেয়। এর প্রধান
+কারণ হলো view-এর ওপর করা যেকোনো পরিবর্তন মূলত ডেটাবেসের main relation বা টেবিলের ওপর প্রয়োগ করতে হয়। একটি View যেভাবে তৈরি করা হয়েছে
+সেটিকে পুনরায় main টেবিলে convert করার প্রক্রিয়াটি সব সময় easy হয় না(For update main table data).
+
+ধরা যাক instructor নামক একটি মূল টেবিল আছে,
+create table instructor(
+    id varchar(5),
+    name varchar(20) NOT NULL,
+    dept_name varchar(20),
+    salary NUMERIC(8, 2),
+    PRIMARY KEY (id)
+);
+
+যেখান থেকে শুধুমাত্র ID, name এবং dept_name নিয়ে একটি view তৈরি করা হয়েছে যার নাম faculty। এখন যদি এই view-তে নতুন একটি row
+যুক্ত করার চেষ্টা করা হয়: insert into faculty values (’30765’, ’Green’, ’Music’);
+
+যেহেতু faculty view instructor টেবিল থেকে তৈরি তাই এই নতুন row-টি main টেবিলে জমা হতে হবে। কিন্তু সমস্যা হলো main instructor
+টেবিলে 'salary' নামে একটি column আছে যা এই ভিউতে নেই। এখন প্রশ্ন জাগে নতুন যুক্ত করা এই শিক্ষকের বেতন কত হবে? এই সমস্যার সমাধানের
+জন্য database system সাধারণত দুটি পথ বেছে নেয়:
+- insert operation-টি বাতিল করে দেওয়া এবং একটি error message পাঠানো।
+- main instructor টেবিলে (’30765’, ’Green’, ’Music’, null) new row হিসেবে data টি save করা অর্থাৎ বেতনের জায়গায় 'null'
+মান বসানো।
+
+# Instructor Table
+--------------------------------------------
+| ID    | Name       | Dept_Name  | Salary |
+| ----- | ---------- | ---------- | ------ |
+| 10101 | Srinivasan | Comp. Sci. | 65000  |
+| 12121 | Wu         | Finance    | 90000  |
+| 15151 | Mozart     | Music      | 40000  |
+| 22222 | Einstein   | Physics    | 95000  |
+| 32343 | El Said    | History    | 60000  |
+| 33456 | Gold       | Physics    | 87000  |
+| 45565 | Katz       | Comp. Sci. | 75000  |
+| 58583 | Califieri  | History    | 62000  |
+| 76543 | Singh      | Finance    | 80000  |
+| 76766 | Crick      | Biology    | 72000  |
+| 83821 | Brandt     | Comp. Sci. | 92000  |
+| 98345 | Kim        | Elec. Eng. | 80000  |
+| 69987 | White      | NULL       | NULL   |
+--------------------------------------------
+
+# Department Table
+---------------------------------------
+| Dept_Name       | Building | Budget |
+| --------------- | -------- | ------ |
+| Biology         | Watson   | 90000  |
+| Comp. Sci.      | Taylor   | 100000 |
+| Electrical Eng. | Taylor   | 85000  |
+| Finance         | Painter  | 120000 |
+| History         | Painter  | 50000  |
+| Music           | Packard  | 80000  |
+| Physics         | Watson   | 70000  |
+| NULL            | Painter  | NULL   |
+---------------------------------------
+
+যখন একাধিক টেবিল থেকে data নিয়ে একটি view তৈরি করা হয়, তখন সমস্যা আরও জটিল হয়ে পড়ে। নিচের ভিউটি লক্ষ্য করা যাক:
+create view instructor_info as
+select ID, name, building
+from instructor, department
+where instructor.dept_name = department.dept_name;
+
+এখানে instructor এবং department table দুটিকে join করে ভিউটি বানানো হয়েছে। এখন যদি কেউ এই ভিউতে নিচের মতো row insert করতে চায়:
+    insert into instructor_info values (’69987’, ’White’, ’Taylor’);
+
+যদি '69987' আইডির কোনো শিক্ষক এবং 'Taylor' বিল্ডিংয়ের কোনো department আগে থেকে না থাকে তবে ডেটাবেসকে instructor টেবিলে
+(’69987’, ’White’, null, null) এবং department টেবিলে (null, ’Taylor’, null) insert করতে হবে। কিন্তু এতে main উদ্দেশ্য
+সফল হবে না। কারণ ভিউটি তৈরি হয়েছে dept_name-এর ওপর base করে। যেহেতু উভয় টেবিলেই dept_name এখন 'null', তাই table join
+করার সময় row দুইটার মধ্যে join হবে না এবং ভিউতে নতুন insert করা row-টি দেখাবেই না। এই কারণেই সাধারণত view-এর মাধ্যমে row
+insert or data update করতে দেওয়া হয় না।
+
+একটি SQL ভিউ তখনই আপডেটেবল হবে (অর্থাৎ insert, update বা delete করা যাবে) যখন নিচের সবকটি শর্ত পূরণ হবে:
+- view-এর from clause-এ শুধুমাত্র একটি table থাকতে হবে। একাধিক table থাকলে তা update করা সম্ভব নয়।
+
+- view-এর select clause-এ শুধুমাত্র টেবিলের কলামগুলোর নাম থাকতে হবে। এতে কোনো mathematical Expression, Aggregation
+function (যেমন: sum, avg, count) বা distinct key-word ব্যবহার করা যাবে না।
+
+- view-এর মাধ্যমে data insert or update করার সময় select clause-এ যে কলামগুলো রাখা হয়নি main টেবিলে সেই কলামগুলোতে 'null'
+value accept করার permission থাকতে হবে। অর্থাৎ ওই কলামগুলোতে not null constraint থাকা যাবে না এবং সেগুলো প্রাইমারি key-এর
+অংশ হতে পারবে না।
+
+- view-এর query-তে কোনো group by অথবা having clause থাকা যাবে না।
+
+# Updatable View Example
+create view history_instructors as
+select * from instructor
+where dept_name = ’History’;
+
+যেহেতু এটি একটি মাত্র টেবিল (instructor) থেকে তৈরি এবং এতে কোনো জটিল function বা grouping নেই তাই এই ভিউতে insert বা delete
+operation চালানো যাবে।
+
+ভিউ updatable হওয়ার জন্য প্রয়োজনীয় শর্তগুলো পূরণ করার পরেও সমস্যা থেকে যায়। ধরা যাক history_instructors নামক একটি view আছে যা
+শুধুমাত্র 'History' department-এর শিক্ষকদের data দেখায়। এখন যদি এই view-এর মাধ্যমে নিচের row-টি insert করার চেষ্টা করা হয়:
+    (’25566’, ’Brown’, ’Biology’, 100000)
+
+এই row-টি main instructor টেবিলে সফলভাবে যুক্ত হয়ে যাবে, কারণ এটি একটি valid data। কিন্তু সমস্যা হলো insert করার সাথে সাথেই এই
+data টি আর ঐ view-তে দেখা যাবে না। কারণ view এমনভাবে তৈরি করা হয়েছে যেখানে শুধুমাত্র 'History' department-এর শিক্ষকদের দেখা সম্ভব
+কিন্তু নতুন যুক্ত করা শিক্ষক 'Biology' department-এর। অর্থাৎ view-এর মাধ্যমে data সিস্টেমে প্রবেশ করলেও view-এর নিজস্ব শর্ত (Selection criteria)
+পূরণ না করায় তা সেখানে অদৃশ্য হয়ে থাকবে। Default ভাবে SQL এই ধরনের update বা insert করার অনুমতি দেয়। তবে এই পরিস্থিতি নিয়ন্ত্রণ করার
+জন্য একটি বিশেষ ব্যবস্থা রয়েছে। view তৈরি করার সময় কুয়েরির একেবারে শেষে with check option clause-টি ব্যবহার করা যায়।
+
+যদি কোনো ভিউ with check option অপশনটি দিয়ে define করা হয় তবে ডেটাবেস সিস্টেম প্রতিটি insert বা update করার সময় check করে
+দেখবে যে নতুন data টি view-এর where clause-এর শর্ত পূরণ করছে কি না। যদি কোনো নতুন data view-এর শর্ত পূরণ না করে, তবে Database
+system সেই অপারেশনটি Reject করবে এবং error message দেবে। একইভাবে কোনো বিদ্যমান data update করার ফলে যদি সেটি view-এর শর্তের
+বাইরে চলে যায় তবে সেই update-টিও বাতিল হয়ে যাবে।

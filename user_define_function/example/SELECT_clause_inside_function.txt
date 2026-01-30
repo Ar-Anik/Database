@@ -1,0 +1,22 @@
+-- Create Function
+DELIMITER $$
+CREATE FUNCTION get_yearly_tax(emp_id INT)
+RETURNS DOUBLE
+DETERMINISTIC
+
+BEGIN
+   DECLARE tax DOUBLE(10, 2);
+   DECLARE slry DOUBLE(10, 2);
+
+   SELECT salary into slry from employees where id = emp_id;
+
+   SET tax = slry * 0.15;
+   RETURN tax;
+END $$
+
+DELIMITER ;
+
+
+-- Use Function
+SELECT get_yearly_tax(5) as YearlyTax;
+SELECT get_yearly_tax(2) as YearlyTax;

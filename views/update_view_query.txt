@@ -1,0 +1,92 @@
+For better understand we have :
+
+# Employee Table
+CREATE TABLE employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    department VARCHAR(50),
+    salary DECIMAL(10, 2),
+    email VARCHAR(100),
+    status VARCHAR(20),
+    hireDate DATE
+);
+
+# Insert Query
+INSERT INTO employees (name, department, salary, email, status, hireDate)
+VALUES
+('Karim Rahman', 'IT', 60000.00, 'karim@example.com', 'Active', '2022-01-15'),
+('Sultana Ahmed', 'HR', 45000.00, 'sultana@example.com', 'Active', '2021-03-10'),
+('Jasim Uddin', 'IT', 55000.00, 'jasim@example.com', 'Inactive', '2020-05-20'),
+('Nasrin Akter', 'Sales', 35000.00, 'nasrin@example.com', 'Active', '2023-02-01'),
+('Tanvir Hossain', 'IT', 75000.00, 'tanvir@example.com', 'Active', '2019-11-12');
+
+# Create a View
+CREATE VIEW active_employees as
+select id, name, department, salary
+from employees
+where status = 'Active';
+
+
+-> Updating/Altering the View Query
+1. MySQL-এ দুইভাবে update করা যায়
+
+- Process-1
+ALTER VIEW active_employees AS
+SELECT id, name, department, salary, email
+FROM employees
+WHERE status = 'Active';
+
+- Process-2
+CREATE OR REPLACE VIEW active_employees AS
+SELECT id, name, department, salary, email
+FROM employees
+WHERE status = 'Active';
+
+ALTER VIEW or CREATE OR REPLACE VIEW ব্যবহার করে view-তে কোন column Add or Remove করা যায়, WHERE clause বা join condition
+পরিবর্তন করা যায়।
+
+Limitation : Both ক্ষেত্রে সবচেয়ে বড় limitation হলো কলামের Alias বা নাম পরিবর্তন নিয়ে, যদি সেটি অন্য কোথাও dependent থাকে।
+suppose একটি view create করা হয়েছে যেখানে একটি কলামের নাম দেওয়া হয়েছে emp_name :
+
+CREATE OR REPLACE VIEW active_staff AS
+SELECT name AS emp_name FROM employees;
+
+এখন REPLACE command চালিয়ে কলামের নাম emp_name থেকে বদলে শুধু full_name করে দেওয়া হয়:
+CREATE OR REPLACE VIEW active_staff AS
+SELECT name AS full_name FROM employees;
+
+যদি এই active_staff ভিউটির ওপর base করে অন্য কোনো Stored Procedure বা Trigger তৈরি করা থাকে যা emp_name কলামটিকে খুঁজছে তবে
+পুরো সিস্টেমটি ভেঙে পড়বে। MySQL এই ধরণের "Structural Dependency" থাকলে REPLACE করতে বাধা দেয়।
+
+
+2. SQL Server
+SQL Server-এ CREATE OR REPLACE কাজ করে না এখানে ALTER ব্যবহার করতে হয়।
+
+ALTER VIEW active_employees AS
+SELECT id, name, department, salary, email
+FROM employees
+WHERE status = 'Active';
+
+
+3. PostgreSQL
+Postgres-এ ALTER VIEW দিয়ে query পরিবর্তন করা যায় না। এখানে CREATE OR REPLACE ব্যবহার করতে হয়। তবে মনে রাখতে হবে বিদ্যমান কলামের
+নাম বা ডাটা টাইপ পরিবর্তন করা যাবে না (শুধু শেষে নতুন কলাম যোগ করা যাবে)।
+
+CREATE OR REPLACE VIEW active_employees AS
+SELECT id, name, department, salary, email
+FROM employees
+WHERE Status = 'Active' AND Salary > 30000;
+
+যদি কলাম delete করতে হয় তবে প্রথমে DROP VIEW করে আবার CREATE VIEW করতে হবে।
+
+
+-> Renaming a View
+- MySQL : RENAME TABLE active_employees TO current_staff;
+- SQL : EXEC sp_rename 'active_employees', 'current_staff';
+- PostgreSQL : ALTER VIEW active_employees RENAME TO current_staff;
+
+
+-> Dropping a View
+View Delete করলে main টেবিলের ডাটার কোনো ক্ষতি হয় না শুধু virtual টেবিলটি মুছে যায়।
+
+MySQL, SQL & PostgreSQL : DROP VIEW IF EXISTS active_employees;

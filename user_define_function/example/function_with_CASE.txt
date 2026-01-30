@@ -1,0 +1,20 @@
+DELIMITER $$
+CREATE FUNCTION grade(mark INT)
+RETURNS CHAR(1)
+DETERMINISTIC
+
+BEGIN
+   RETURN CASE
+       WHEN mark >= 80 THEN 'A'
+       WHEN mark >= 60 THEN 'B'
+       WHEN mark >= 40 THEN 'C'
+       ELSE 'F'
+   END;
+END $$
+
+DELIMITER ;
+
+
+
+SELECT grade(65);
+SELECT grade(33);

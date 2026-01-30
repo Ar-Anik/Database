@@ -1,0 +1,15 @@
+DELIMITER $$
+
+CREATE FUNCTION total_with_tax(p DECIMAL(10, 2))
+RETURNS DECIMAL(10, 2)
+DETERMINISTIC
+
+BEGIN
+   RETURN add_vat(p) + 50;
+END $$
+
+DELIMITER ;
+
+
+SELECT total_with_tax(10) AS Total;
+SELECT total_with_tax(7) AS Total;

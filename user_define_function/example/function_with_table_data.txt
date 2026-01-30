@@ -1,0 +1,26 @@
+CREATE TABLE product (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    price DECIMAL(10,2)
+);
+
+INSERT INTO product (name, price) VALUES
+('Laptop', 50000),
+('Phone', 20000),
+('Mouse', 500);
+
+-- Function
+DELIMITER //
+CREATE FUNCTION add_vat(p DECIMAL(10, 2))
+RETURNS DECIMAL(10, 2)
+DETERMINISTIC
+BEGIN
+   RETURN p * 1.15;
+END //
+
+DELIMITER ;
+
+
+-- Use Function
+SELECT name, price, add_vat(price) AS price_with_vat
+FROM product;

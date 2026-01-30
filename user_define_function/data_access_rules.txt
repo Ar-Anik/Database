@@ -1,0 +1,92 @@
+1. NO SQL
+NO SQL means, This function does not access any table and does not execute any SQL like SELECT/INSERT/UPDATE/DELETE.
+It only does: calculations, string operations, math, logic
+
+Use NO SQL when:
+- The function works only with input parameters
+- No table is touched
+
+# Example
+DELIMITER $$
+
+CREATE FUNCTION calc_vat(price DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+NO SQL
+BEGIN
+    RETURN price * 0.15;
+END $$
+
+DELIMITER ;
+
+
+2. READS SQL DATA
+READS SQL DATA means, This function reads data from tables using SELECT but does not modify any data.
+
+Use READS SQL DATA when:
+- The function uses SELECT ... FROM table
+- But never inserts, updates, or deletes
+
+# Example
+DELIMITER $$
+
+CREATE FUNCTION get_product_price(pid INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE p DECIMAL(10,2);
+
+    SELECT price INTO p
+    FROM products
+    WHERE id = pid;
+
+    RETURN p;
+END $$
+
+DELIMITER ;
+
+
+3. MODIFIES SQL DATA
+MODIFIES SQL DATA means, This function changes table data using : INSERT, UPDATE, DELETE
+
+Note : It is not safe data modification inside FUNCTIONS. Because:
+- Functions may run row-by-row
+- This can cause: data corruption, infinite loops, replication bugs, unpredictable behavior.
+
+So Data modification should be done using PROCEDURES not FUNCTIONS.
+
+# Example:
+DELIMITER $$
+
+CREATE FUNCTION dangerous_update(pid INT)
+RETURNS INT
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+BEGIN
+    UPDATE product
+    SET price = price + 100
+    WHERE id = pid;
+
+    RETURN 1;
+END $$
+
+DELIMITER ;
+
+When run this query show below error because we use NOT DETERMINISTIC:
+[HY000][1418] This function has none of DETERMINISTIC, NO SQL, or READS SQL DATA in its declaration and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)
+
+This issue fixed by :
+SET GLOBAL log_bin_trust_function_creators = 1;
+
+
+4. CONTAINS SQL
+CONTAINS SQL means, this function contains SQL statements but MySQL cannot guarantee whether it reads or modifies data.
+
+It is:
+- A generic / unknown category
+- Less safe for replication
+
+It is used when:
+- MySQL cannot classify our function
+- Or we are lazy and didn’t specify correctly (not recommended).

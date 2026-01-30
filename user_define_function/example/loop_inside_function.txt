@@ -1,0 +1,21 @@
+DELIMITER $$
+CREATE FUNCTION factorial(n INT)
+RETURNS BIGINT
+DETERMINISTIC
+
+BEGIN
+    DECLARE result BIGINT DEFAULT 1;
+
+    WHILE n > 1 DO
+       SET result = result * n;
+       SET n = n - 1;
+    END WHILE;
+
+    RETURN result;
+END $$
+
+DELIMITER ;
+
+
+SELECT factorial(10);
+SELECT factorial(8);

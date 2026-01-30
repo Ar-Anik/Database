@@ -1,0 +1,56 @@
+Book : Silberschatz-Database System Concepts 6th (page : 123, page : 608)
+
+সাধারণত ডাটাবেসে View বলতে একটি virtual table-কে বোঝায় যার নিজস্ব কোনো ডেটা থাকে না। কিন্তু database system এই ভিউয়ের ফলাফলগুলোকে স্থায়ীভাবে
+বা physically সংরক্ষণ করার অনুমতি দেয়। যখন কোনো ভিউয়ের ফলাফল ডাটাবেসে টেবিলের মতো জমা রাখা হয় তখন তাকে Materialized Views বলা হয়।
+
+এর মূল বৈশিষ্ট্য হলো যদি view-টি তৈরি করতে ব্যবহৃত মূল টেবিলগুলোতে (Base Relations) কোনো পরিবর্তন আসে তবে system নিশ্চিত করে যেন সংরক্ষিত
+view-টিও সেই অনুযায়ী up-to-date থাকে।
+
+suppose একটি ইউনিভার্সিটির ডাটাবেসে instructor নামে একটি টেবিল আছে এবং সেখান থেকে একটি ভিউ তৈরি করা হয়েছে যার নাম departments_total_salary.
+-> instructor table :
+create table instructor(
+    id varchar(5),
+    name varchar(20) NOT NULL,
+    dept_name varchar(20),
+    salary NUMERIC(8, 2),
+    PRIMARY KEY (id)
+);
+
+-> create view
+create view department_total_salary(dept_name, total_salary) as
+select dept_name, sum(salary)
+from instructor
+group by dept_name;
+
+-> যদি এই ভিউটি ম্যাটেরিয়ালাইজড হয় :
+- তবে এর calculated result-গুলো ডাটাবেসে সংরক্ষিত থাকবে।
+- এখন যদি instructor টেবিলে নতুন কোনো শিক্ষক যোগ করা হয় বা কাউকে বাদ দেওয়া হয় তবে স্বাভাবিকভাবেই department-এর total বেতনের হিসাব বদলে যাবে।
+- এই পরিবর্তনের ফলে database system-কে অবশ্যই Materialized ভিউয়ের ভেতরে থাকা data গুলোকেও update করতে হবে।
+- একইভাবে যদি কোনো শিক্ষকের বেতন বাড়ানো বা কমানো হয় তবে সংশ্লিষ্ট department-এর মোট বেতনের তথ্যেও পরিবর্তন আনতে হবে।
+
+Materialized View-কে সবসময় মূল টেবিলের সাথে সামঞ্জস্যপূর্ণ রাখার বা up-to-date রাখার প্রক্রিয়াকে Materialized View Maintenance বলা হয়। database
+system গুলো প্রধানত 3 ভাবে এই কাজ সস্পাদন করে:
+
+1. Immediate Maintenance: main table বা relation update হওয়ার সাথে সাথেই ভিউটি আপডেট করা হয়।
+
+2. Lazy Maintenance: যখন কোনো user বা application view-টি ব্যবহারের জন্য call করে বা access করে ঠিক তখনই এটি আপডেট করা হয়।
+
+3. Periodic Maintenance: একটি নির্দিষ্ট সময় পর পর (যেমন: প্রতি ১ ঘণ্টা বা প্রতিদিন রাতে) view-টি update করা হয়। এই ক্ষেত্রে ভিউয়ের data মাঝেমধ্যে
+Stale (পুরানো বা সেকেলে) হতে পারে। অর্থাৎ যখন এটি ব্যবহার করা হয় তখন update করা হয়নি এবং যদি application-টির updated ডেটার প্রয়োজন হয় তবে
+এটি ব্যবহার করা উচিত নয়।
+
+যেসব application বা software বারবার একই view ব্যবহার করে থাকে সেগুলোর ক্ষেত্রে Materialized View ব্যবহার করা যেতে পারে। বিশেষ করে এমন সব
+অ্যাপ্লিকেশনের কথা চিন্তা করা যাক যেখানে বিশাল বড় কোনো টেবিল (Large Relations) থেকে তথ্য সংগ্রহ করে তার ওপর বিভিন্ন গাণিতিক হিসাব বা aggregate
+কুয়েরি (যেমন: মোট যোগফল, গড় নির্ণয় বা সংখ্যা গণনা) execute করতে হয় এবং এই result খুব দ্রুত বা তাৎক্ষণিকভাবে প্রয়োজন হয়। এমন ক্ষেত্রে সেই নির্দিষ্ট
+কুয়েরিগুলোর জন্য Materialized View তৈরি করলে application-এর speed increase হয়
+
+সাধারণ ভিউয়ের ক্ষেত্রে প্রতিবার query execute করার সময় ডাটাবেসকে view relation-এর সবগুলো table read করতে হয় এবং প্রতিবার নতুন করে calculate
+করতে হয়। এতে সময় ও প্রসেসিং energy ব্যয় হয়। Materialized ভিউয়ের ক্ষেত্রে যেহেতু calculate করা result-টি আগে থেকেই ডাটাবেসে সংরক্ষিত থাকে তাই সিস্টেমকে
+আর view relation-এর টেবিলগুলো read করার প্রয়োজন পড়ে না। সরাসরি storage থেকে ছোট ফলাফলটি সরবরাহ করা হয় ফলে response পাওয়া যায় quickly.
+
+একটি view-কে Materialized করার আগে এর জন্য প্রয়োজনীয় অতিরিক্ত storage এবং view relation-এর table গুলো পরিবর্তনের সাথে সাথে ভিউটিকে পুনরায়
+update করার জন্য যে বাড়তি প্রসেসিং বা 'ওভারহেড' তৈরি হয় সেই বিষয়গুলোর সাথে প্রাপ্ত সুবিধার একটি তুলনামূলক ভারসাম্য বজায় রাখা জরুরি।
+
+SQL ল্যাঙ্গুয়েজের কোনো নির্দিষ্ট standard নিয়ম নেই যে কীভাবে একটি view-কে Materialized হিসেবে define করতে হবে। তবে আধুনিক অনেক ডাটাবেস সিস্টেম
+(যেমন: Oracle, PostgreSQL, SQL Server) তাদের নিজস্ব command বা extension ব্যবহার করে এই সুবিধা প্রদান করে। কিছু সিস্টেম সবসময় ডেটা
+up-to-date রাখে আবার কিছু সিস্টেম নির্দিষ্ট সময় পর পর নতুন করে ডেটা Recompute করার সুযোগ দেয়।

@@ -1,0 +1,18 @@
+-- Function Start
+DELIMITER //
+CREATE FUNCTION get_result(mark INT)
+RETURNS VARCHAR(10)
+DETERMINISTIC
+BEGIN
+   IF mark >= 40 THEN
+        RETURN 'PASS';
+   ELSE
+       RETURN 'FAIL';
+   END IF;
+END //
+
+DELIMITER ;
+
+-- Use Function
+SELECT get_result(35) as Result;
+SELECT get_result(80) as Result;

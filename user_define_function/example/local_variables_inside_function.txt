@@ -1,0 +1,17 @@
+-- Function Create
+DELIMITER $$
+CREATE FUNCTION salary_with_bonus(salary INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+   DECLARE bonus INT;
+   SET bonus = salary * 0.10;
+   RETURN salary + bonus;
+END $$
+
+DELIMITER ;
+
+
+-- Use Function
+SELECT salary_with_bonus(10000) as TotalSalary;
+SELECT salary_with_bonus(20000) as TotalSalary;
