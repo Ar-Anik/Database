@@ -1,5 +1,5 @@
 -> Type of View :
-# Below all query for SQL
+# Below all query for SQL / MySQL(Without Materialized view)
 
 1. Simple View
 A Simple View is the most basic form of a view. It is derived from a single table and acts as a filter or a subset of

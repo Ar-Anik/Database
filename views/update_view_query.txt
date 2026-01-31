@@ -42,7 +42,7 @@ SELECT id, name, department, salary, email
 FROM employees
 WHERE status = 'Active';
 
-ALTER VIEW or CREATE OR REPLACE VIEW ব্যবহার করে view-তে কোন column Add or Remove করা যায়, WHERE clause বা join condition
+`ALTER VIEW` or `CREATE OR REPLACE VIEW` ব্যবহার করে view-তে কোন column Add or Remove করা যায়, WHERE clause বা join condition
 পরিবর্তন করা যায়।
 
 Limitation : Both ক্ষেত্রে সবচেয়ে বড় limitation হলো কলামের Alias বা নাম পরিবর্তন নিয়ে, যদি সেটি অন্য কোথাও dependent থাকে।
@@ -60,7 +60,7 @@ SELECT name AS full_name FROM employees;
 
 
 2. SQL Server
-SQL Server-এ CREATE OR REPLACE কাজ করে না এখানে ALTER ব্যবহার করতে হয়।
+SQL Server-এ `CREATE OR REPLACE` কাজ করে না এখানে ALTER ব্যবহার করতে হয়।
 
 ALTER VIEW active_employees AS
 SELECT id, name, department, salary, email
@@ -69,7 +69,7 @@ WHERE status = 'Active';
 
 
 3. PostgreSQL
-Postgres-এ ALTER VIEW দিয়ে query পরিবর্তন করা যায় না। এখানে CREATE OR REPLACE ব্যবহার করতে হয়। তবে মনে রাখতে হবে বিদ্যমান কলামের
+Postgres-এ ALTER VIEW দিয়ে query পরিবর্তন করা যায় না। এখানে `CREATE OR REPLACE` ব্যবহার করতে হয়। তবে মনে রাখতে হবে বিদ্যমান কলামের
 নাম বা ডাটা টাইপ পরিবর্তন করা যাবে না (শুধু শেষে নতুন কলাম যোগ করা যাবে)।
 
 CREATE OR REPLACE VIEW active_employees AS
