@@ -1,1 +1,0 @@
-Link : https://www.mysqltutorial.org/mysql-basics/mysql-recursive-cte/

@@ -1,0 +1,34 @@
+Practice Problem in Leetcode : https://leetcode.com/discuss/post/1601295/database-sql-primer-part-4-recursive-cte-qmdf/
+
+# Using recursive CTE to traverse the hierarchical data
+# suppose we have a table c_emp
+
+CREATE TABLE c_emp (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    manager_id INT
+);
+
+# insert data
+INSERT INTO c_emp VALUES
+(1, 'Anik', NULL),
+(2, 'Oni', 1),
+(3, 'Joy', 2),
+(4, 'Ovi', 2),
+(5, 'Onu', 3);
+
+
+-- CTE Query
+WITH RECURSIVE e_hierarchy AS (
+    SELECT id, name, manager_id, 1 AS level
+    FROM c_emp
+    WHERE manager_id is NULL
+
+    UNION ALL
+
+    SELECT c_emp.*, e_hierarchy.level + 1 AS level
+    FROM c_emp
+        JOIN e_hierarchy ON c_emp.manager_id = e_hierarchy.id
+)
+SELECT * FROM e_hierarchy;
+

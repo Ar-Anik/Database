@@ -1,0 +1,69 @@
+-- ALTER FUNCTION
+
+-- MySQL
+In MySQL, we cann't directly ALTER the body (code) of a FUNCTION. To change the logic we must DROP the function
+and CREATE it again. Because a function is a compiled object, MySQL does not support “editing” its internal code.
+In Mysql we can only ALTER FUNCTION metadata, not the SQL body.
+
+In Mysql we can only ALTER FUNCTION metadata like :
+- COMMENT
+- SQL SECURITY (DEFINER / INVOKER)
+- DEFINER user
+
+# COMMENT
+In Mysql 8+, we can do :
+    ALTER FUNCTION factorial COMMENT 'Calculates factorial of a number';
+
+
+-- PostgreSQL
+PostgreSQL support `CREATE OR REPLACE` Keyword. By This Keyword we can alter or modify a function logic directly.
+
+PostgreSQL like MySQL, supports ALTER FUNCTION. However in both PostgreSQL and MySQL, ALTER FUNCTION can modify only
+function metadata (such as owner, security, or configuration) not the function’s logic.
+
+# Example : CREATE OR REPLACE
+-- Suppose we have a function factorial :
+CREATE FUNCTION factorial(n INT)
+RETURNS BIGINT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    result BIGINT := 1;
+BEGIN
+    WHILE n > 1 LOOP
+        result := result * n;
+        n := n - 1;
+    END LOOP;
+
+    RETURN result;
+END;
+$$;
+
+-- call this function
+SELECT factorial(10) AS Factorial;
+
+-- Modify this function
+CREATE OR REPLACE FUNCTION factorial(n INT)
+RETURNS BIGINT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    result BIGINT := 1;
+BEGIN
+    IF n < 0 THEN
+        RAISE EXCEPTION 'Negative Numbers Not Allowed';
+    END IF;
+
+    WHILE n > 1 LOOP
+        result := result * n;
+        n := n - 1;
+    END LOOP;
+
+    RETURN result;
+END;
+$$;
+
+-> PostgreSQL identifies a function by: Function name + parameter types
+
+So, factorial(n INT) and factorial(n BIGINT) they are different function.
+Above in Function Modify, if we use factorial(n BIGINT) instead of factorial(n INT) PostgreSQL create new function.

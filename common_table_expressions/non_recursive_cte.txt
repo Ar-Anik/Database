@@ -1,4 +1,5 @@
-Q : How does a non-recursive CTE handle temporary data in memory? What happens when the CTE query is executed, and where is the data stored for use by the main query?
+Q : How does a non-recursive CTE handle temporary data in memory?
+Q : What happens when the CTE query is executed and where is the data stored for use by the main query?
 
 Q : What Happens Internally When we Use a Non-Recursive CTE?
 -> CTE example :

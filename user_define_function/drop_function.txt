@@ -1,0 +1,19 @@
+-- Drop Function
+
+-- MySQL
+MySQL does NOT support function overloading. A function name is unique per database. Parameters are not part of the
+function identity.
+
+- Command
+1. DROP FUNCTION factorial;
+2. DROP FUNCTION IF EXISTS factorial;
+
+
+-- PostgreSQL
+PostgreSQL supports function overloading. Function identity = name + parameter types.
+So in PostgreSQL same name functions can exist with different parameter types.
+
+- Command
+1. DROP FUNCTION factorial(INT);
+2. DROP FUNCTION IF EXISTS factorial(INT);
+
