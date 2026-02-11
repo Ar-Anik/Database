@@ -1,0 +1,99 @@
+Three Type of function parameter : IN, OUT, INOUT
+
+-> IN Parameter(Default)
+IN parameters receive values from the caller. If we don’t specify a mode, PostgreSQL assumes IN.
+
+# Systax
+- CREATE FUNCTION func_name(param type)
+
+- CREATE FUNCTION func_name(IN param type)
+
+# Example-1
+CREATE FUNCTION square_number(n INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN n * n;
+END;
+$$;
+
+# Example-2
+CREATE FUNCTION add_numbers(a INT, b INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN a + b;
+END;
+$$;
+
+
+-> OUT Parameter
+OUT parameters are used to return values from a function. They act like output variables. When we use OUT, we do NOT specify RETURNS normally.
+If a function has OUT parameters, PostgreSQL automatically builds a composite return type from them.
+
+# Example-1
+CREATE FUNCTION get_constant(OUT result INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    result := 100;
+END;
+$$;
+
+
+# Example-2
+CREATE FUNCTION get_person(OUT id INT, OUT name TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    id := 1;
+    name := 'Anik';
+END;
+$$;
+
+
+-> INOUT Parameters
+INOUT parameters act as both input and output. They:
+- receive an initial value
+- are modified inside the function
+- return the modified value
+
+# Example-1
+CREATE FUNCTION increment(INOUT n INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    n := n+1;
+END;
+$$;
+
+
+# Example-2
+CREATE FUNCTION swap_values(INOUT a INT, INOUT b INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    temp INT;
+BEGIN
+    temp := a;
+    a := b;
+    b := temp;
+END;
+$$;
+
+-- Call Function
+SELECT * FROM swap_values(5, 10);
+
+
+-> PostgreSQL allows mixing IN, OUT, INOUT Parameter.
+CREATE FUNCTION calculate_tax(IN amount NUMERIC, OUT tax NUMERIC, OUT total NUMERIC)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    tax := amount * 0.10;
+    total := amount + tax;
+END;
+$$;
+

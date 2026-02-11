@@ -1,0 +1,20 @@
+-> Materialized View-এ সরাসরি কোনো সাধারণ trigger (INSERT, UPDATE, DELETE) কাজ করে না কারণ:
+
+1. Physical Snapshot
+একটি সাধারণ View শুধুমাত্র একটি query hold করে, কিন্তু Materialized View ওই কুয়েরির result-কে physically ডিস্কে save করে রাখে। এটি অনেকটা
+সাধারণ টেবিলের মতো মনে হলেও এর কাজের পদ্ধতি ভিন্ন।
+
+2. Lack of Row-level DML
+সাধারণ টেবিলে আমরা row-by-row data insert বা update করি যার ফলে trigger fire হওয়ার সুযোগ পায়। কিন্তু Materialized View-তে সরাসরি
+কোনো INSERT, UPDATE বা DELETE কমান্ড চালানো যায় না। এটি Read-only object হিসেবে কাজ করে।
+
+3. The REFRESH Mechanism
+Materialized View update করার একমাত্র উপায় হলো REFRESH MATERIALIZED VIEW command চালানো। যখন এই command-টি চালানো হয়, তখন
+PostgreSQL engine পুরো view-টি নতুন করে তৈরি করে অথবা বড় একটি batch অপারেশনের মাধ্যমে data update করে।
+
+এটি কোনো row ধরে ধরে পরিবর্তন করে না বরং একটি Holistic Process বা সামগ্রিক পদ্ধতি হিসেবে কাজ করে। এই প্রসেসটি Standard DML trigger
+engine-এর আওতাভুক্ত নয়।
+
+-> সাধারণ View-এর ক্ষেত্রে INSTEAD OF trigger ব্যবহার করে সেটিকে update করা যায়, কারণ সেখানে কোনো physical data থাকে না। কিন্তু
+Materialized View-তে physical data থাকায় এবং এর refresh mechanism আলাদা হওয়ায় এখানে INSTEAD OF লজিকও সরাসরি কাজ করে না।
+

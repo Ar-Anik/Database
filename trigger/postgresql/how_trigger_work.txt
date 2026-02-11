@@ -1,0 +1,80 @@
+Q : How Trigger Works?
+-> যখন ডাটাবেসে কোনো change/operation করার try করা হয় তখন PostgreSQL engine একটি নির্দিষ্ট sequence বা ক্রম অনুসরণ করে। এই প্রক্রিয়াটি
+মূলত Trigger Manager নামক একটি internal system দ্বারা নিয়ন্ত্রিত হয়।
+
+Step-1: Event Detection and Trigger Inventory Check
+যখন কোনো SQL command (যেমন: INSERT, UPDATE, বা DELETE) execute করা হয় তখন PostgreSQL engine সরাসরি ডেটা পরিবর্তন করে না। প্রথমে
+এটি ডাটাবেসের internal system catalog (যেমন: pg_trigger)(Note-1) check করে দেখে যে ঐ টেবিলের ওপর কোনো trigger define করা আছে কি না। যদি
+কোনো trigger থাকে, তবে সেটির type এবং timing(Before or After) note করা হয়।
+
+Note-1 :
+PostgreSQL-এর internal system catalog-এ pg_trigger নামক একটি table থাকে। যেখানে ডাটাবেসে তৈরি করা প্রতিটি trigger-এর metadata
+সংরক্ষিত থাকে। এই টেবিলে tgtype কলামটি use করা হয় কোন command এর জন্য কোন event fire করা হবে তা identify করতে। এই tgtype কলামটি
+একটি bitmask হিসেবে কাজ করে। সেখানে প্রতিটি বিট আলাদা আলাদা Event নির্দেশ করে। Bit-এর তালিকা ও মান :
+
+-------------------------------------------------------------------------------------------------------------------
+| Bit Position | Value (Decimal) | Feature             | Description
+| ------------ | --------------- | ------------------- | ----------------------------------------------------------
+| Bit 0        | 1               | ROW                 | 1 হলে এটি Row-level trigger, 0 হলে Statement-level trigger
+| Bit 1        | 2               | BEFORE              | 1 হলে এটি BEFORE trigger
+| Bit 2        | 4               | AFTER               | 1 হলে এটি AFTER trigger
+| Bit 3        | 8               | INSTEAD             | 1 হলে এটি INSTEAD OF trigger
+| Bit 4        | 16              | INSERT              | 1 হলে এটি INSERT ইভেন্টে কাজ করবে
+| Bit 5        | 32              | DELETE              | 1 হলে এটি DELETE ইভেন্টে কাজ করবে
+| Bit 6        | 64              | UPDATE              | 1 হলে এটি UPDATE ইভেন্টে কাজ করবে
+| Bit 7        | 128             | TRUNCATE            | 1 হলে এটি TRUNCATE ইভেন্টে কাজ করবে
+-------------------------------------------------------------------------------------------------------------------
+
+এখানে value গুলা bit এর position অনুযায়ী 2 এর power হিসাবে দেখানো হয়েছে, like : 2^0 = 1, 2^1 = 2, 2^2 = 4 etc.
+
+-> command অনুযায়ী trigger identification
+ধরা যাক একটি trigger define করা হয়েছে এভাবে: BEFORE INSERT OR UPDATE FOR EACH ROW।
+
+তাহলে tgtype কলামের মান হবে: ROW (1) + BEFORE (2) + INSERT (16) + UPDATE (64) = 83।
+
+যখন কোনো UPDATE command execute করা হয় তখন engine এই 83 সংখ্যাটিকে বাইনারিতে রূপান্তর করে দেখে যে 64-তম বিট (UPDATE) active কি না।
+যেহেতু এখানে 64 যোগ করা আছে, তাই engine বুঝে নেয় যে এই trigger-টি এখন run করতে হবে। কিন্তু যদি শুধু DELETE করা হয়, তবে engine দেখবে
+যে 83-এর ভেতরে 32 (DELETE) bit-টি নেই তাই সেটিকে ignore করা হয়।
+
+# for see tgtype command : select tgtype from pg_trigger;
+
+Step-2: Trigger Function Loading and Memory Allocation
+যদি trigger খুঁজে পাওয়া যায় তবে db engine, trigger-এর সাথে যুক্ত trigger function-টি মেমরিতে load করে। এই সময়ে engine দুটি special
+record variable (NEW এবং OLD) এর জন্য memory allocate করে।
+- NEW ভেরিয়েবলে নতুন আসা data রাখা হয়।
+- OLD ভেরিয়েবলে আগের বিদ্যমান data রাখা হয়।
+
+Step-3: BEFORE Trigger Execution
+যদি trigger-টি BEFORE টাইপের হয় তবে main টেবিলে ডেটা write হওয়ার আগেই এটি active হয়। এটি অত্যন্ত গুরুত্বপূর্ণ একটি step কারণ:
+- এই step-এ ফাংশনটি NEW রেকর্ডের data পরিবর্তন করতে পারে।
+- যদি ফাংশনটি NULL RETURN করে তবে ঐ নির্দিষ্ট row-এর operation-টি engine বাতিল করে দেয়। অর্থাৎ কোনো error ছাড়াই ঐ data-টি আর টেবিলে ঢুকবে না।
+
+Step-3.5: INSTEAD OF Trigger Execution (Only for Views)
+এটি মূলত Views-এর ওপর কাজ করে। যেহেতু একাধিক টেবিল join করে তৈরি করা View-তে সরাসরি INSERT বা UPDATE করা যায় না তাই engine-কে বিকল্প
+পথ দেখানোর জন্য এটি ব্যবহৃত হয়।
+- Command Override: যখন View-তে কোনো পরিবর্তনের চেষ্টা করা হয়, তখন engine মূল SQL command-টি execute না করে সরাসরি এই trigger
+function-টি run করে।
+- Manual Execution: এই ফাংশনের ভেতরে developer নিজে logic লিখে দেন যে View-তে আসা ডেটাগুলো আসলে কোন কোন base table-এ (আসল
+টেবিলে) split হয়ে save হবে।
+- Handling NULL Return: যদি এই trigger function-টি NULL return করে, তবে engine ধরে নেয় যে ওই নির্দিষ্ট row-টির জন্য কোনো কাজ করার
+প্রয়োজন নেই। ফলে কোনো error ছাড়াই ওই row-এর operation-টি skip করা হয় এবং আসল টেবিলগুলোতে কোনো পরিবর্তন ঘটে না।
+
+Step-4: Constraint and Validation Check
+যদি trigger function NULL না করে এবং BEFORE trigger successfully শেষ হওয়ার পর db engine টেবিলের সকল constraints (যেমন: NOT NULL,
+UNIQUE, CHECK) এবং data validation check করে। যদি কোনো data ডাটাবেসের rules break করে তবে পুরো sequence এখানেই থেমে যায় এবং একটি
+error message generate হয়।
+
+Step-5: Physical Write or Data Storage
+সব validation এবং condition successfully শেষ হলে, engine data-টিকে Physical storage-এ বা main টেবিলে write করে। এই পর্যায়ে
+ডেটাটি ডাটাবেসে জায়গা করে নেয়, তবে transaction-টি তখনও পুরোপুরি সম্পন্ন (Commit) হয় না।
+
+Step-6: AFTER Trigger Execution
+data storage-এ save হওয়ার ঠিক পরেই AFTER trigger কার্যকর হয়।
+- এই step-এ ফাংশনটি আর NEW বা OLD data change করতে পারে না কারণ data already টেবিলে write হয়ে গেছে।
+- এটি মূলত audit log রাখা, অন্য টেবিলে data copy করা বা notification পাঠানোর মতো কাজের জন্য ব্যবহৃত হয়।
+
+Step-7: Transaction Completion (Atomicity)
+সবশেষে যদি মূল command এবং এর সাথে যুক্ত সকল trigger successfully শেষ হয় তবেই transaction-টি COMMIT হয়। যদি এই 7 টি ধাপের যেকোনো
+এক জায়গায় কোনো error raise হয়, তবে engine পুরো কাজটিকে আগের অবস্থায় ফিরিয়ে নেয় (Rollback)। এটি নিশ্চিত করে যে ডাটাবেসে কোনো ভুল বা
+অসম্পূর্ণ data জমা থাকবে না।
+

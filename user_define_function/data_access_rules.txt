@@ -1,3 +1,5 @@
+-- MySQL
+
 1. NO SQL
 NO SQL means, This function does not access any table and does not execute any SQL like SELECT/INSERT/UPDATE/DELETE.
 It only does: calculations, string operations, math, logic

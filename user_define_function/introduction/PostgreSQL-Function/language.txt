@@ -1,0 +1,56 @@
+-> PostgreSQL supports multiple function languages. like :
+1. sql
+Purpose of sql is :
+    - Only ONE SQL statement
+    - No variables, no IF, no loops
+    - Has no BEGIN/END
+    - Fastest execution
+    - Planner can inline them
+
+-- Example-1
+CREATE FUNCTION add_sql(a INT, b INT)
+RETURNS INT
+LANGUAGE sql
+AS $$
+    SELECT a + b;
+$$;
+
+-- Example-2
+CREATE FUNCTION get_active_users()
+RETURNS TABLE(id INT, name TEXT)
+LANGUAGE sql
+AS $$
+    SELECT id, name
+    FROM users
+    WHERE active = TRUE;
+$$;
+
+
+2. plpgsql(Native PostgreSQL procedural language)
+It Support :
+    - Variables
+    - IF / ELSE
+    - LOOP / WHILE / FOR
+    - Exception handling
+
+It's Most commonly used language.
+
+-- Example-1
+CREATE FUNCTION grade(score INT)
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF score >= 80 THEN
+        RETURN 'A';
+    ELSIF score >= 60 THEN
+        RETURN 'B';
+    ELSE
+        RETURN 'F';
+    END IF;
+END;
+$$;
+
+3. plpython3u (Embed Python 3 inside PostgreSQL)
+4. plperl (Embed Perl code)
+5. plv8 (JavaScript inside PostgreSQL)

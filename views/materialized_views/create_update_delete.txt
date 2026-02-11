@@ -37,7 +37,7 @@ group by product_id;
 
 
 2. ALTER MATERIALIZED VIEW
-MATERIALIZED ভিউয়ের name change, user permission change বা schema change করতে এটি ব্যবহৃত হয়।
+MATERIALIZED ভিউয়ের name change, user permission change করতে এটি ব্যবহৃত হয়।
 
 - Name Change : alter materialized view monthly_report rename to annual_report;
 
@@ -56,6 +56,8 @@ PostgreSQL-এ একটি MATERIALIZED VIEW create করার পর সে�
 - monthly_report
 - yearly_report (এটি তৈরি করা হয়েছে monthly_report এর ওপর base করে)
 
-এখন যদি DROP MATERIALIZED VIEW monthly_report command run করি তবে PostgreSQL একটি Error দেবে। এটি বলবে যে "yearly_report", "monthly_report" এর ওপর নির্ভরশীল তাই এটি delete করা যাবে না।
-এই error solve করার জন্য run করতে হবে : DROP MATERIALIZED VIEW monthly_report CASCADE;
-CASCADE keyword দেখার পর PostgreSQL, প্রথমে monthly_report delete করবে। এরপর এর ওপর নির্ভরশীল yearly_report-কেও automatic delete করে দেবে।
+এখন যদি DROP MATERIALIZED VIEW monthly_report command run করি তবে PostgreSQL একটি Error দেবে। এটি বলবে যে
+"yearly_report", "monthly_report" এর ওপর নির্ভরশীল তাই এটি delete করা যাবে না। এই error solve করার জন্য run করতে হবে :
+    DROP MATERIALIZED VIEW monthly_report CASCADE;
+CASCADE keyword দেখার পর PostgreSQL, প্রথমে monthly_report delete করবে। এরপর এর ওপর নির্ভরশীল yearly_report-কেও automatic
+delete করে দেবে।

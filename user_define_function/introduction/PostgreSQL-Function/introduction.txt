@@ -1,0 +1,99 @@
+A PostgreSQL function is a named, reusable database object that:
+- Accepts zero or more parameters
+- Executes server-side logic
+- Returns a value, a row or a set of rows
+- Runs inside the PostgreSQL engine
+- Is stored in the system catalog (pg_proc)
+
+PostgreSQL functions are not macros and not inline SQL text. They are compiled, planned and executed by the database engine.
+
+# Syntax
+CREATE FUNCTION function_name (
+    parameter_name parameter_type,
+    ...
+)
+RETURNS return_type
+LANGUAGE language_name
+AS $$
+    function_body
+$$;
+
+This syntax is mandatory. PostgreSQL will reject the function if any required part is missing.
+
+-- Example
+
+-- Basic Function Define
+CREATE FUNCTION hello()
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+BEGIN
+   RETURN 'Hello World';
+END;
+$$;
+
+- Call Function
+SELECT hello();
+
+
+-- Function with parameters
+CREATE FUNCTION add_numbers(a INTEGER, b INTEGER)
+RETURNS INTEGER
+LANGUAGE sql
+AS $$
+BEGIN
+    RETURN a + b;
+END;
+$$;
+
+-- Call function
+SELECT add_numbers(10, 20);
+
+
+-> PostgreSQL supports function overloading. Function identity by function_name and parameter types.
+So these are different functions:
+    1. add_numbers(INTEGER, INTEGER)
+    2. add_numbers(BIGINT, BIGINT)
+
+That is why PostgreSQL requires parameter types to be exact.
+
+
+Q : What is parsing?
+-> Converting source text (SQL or PL/pgSQL) into an internal structured representation that PostgreSQL can analyze, plan and execute.
+
+Q : What is Transaction?
+-> In PostgreSQL (and all serious databases), a transaction is:
+A sequence of one or more SQL statements that the database treats as a single, indivisible unit of work.
+Indivisible means, all effects are applied or none of the effects are applied, There is no partial success.
+
+Databases must guarantee correctness even when:
+- errors occur
+- the server crashes
+- multiple users run queries at the same time
+
+Transactions are the mechanism that provides this guarantee.
+
+
+-> Function execution lifecycle (exact behavior)
+When PostgreSQL executes a function:
+- Parses the SQL or PL/pgSQL
+- Validates parameter types
+- Builds execution plan
+- Caches the plan (unless volatile)
+- Executes inside the current transaction
+- Returns the result to caller
+
+Functions do NOT auto-commit, They always run inside the caller’s transaction.
+
+
+-> pg_proc and pg_namespace are system catalog tables.
+System catalogs are internal PostgreSQL tables that store metadata about database objects.
+
+PostgreSQL itself queries these tables to know:
+- what objects exist
+- how they behave
+- how to execute them
+
+Functions are stored in pg_proc (function metadata) and pg_namespace (schema).
+
+we can View them by : SELECT proname, proargtypes FROM pg_proc;

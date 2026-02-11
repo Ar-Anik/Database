@@ -1,0 +1,162 @@
+-> Types of trigger
+PostgreSQL-এ trigger প্রধানত তিনটি স্তরে কাজ করে।
+
+1. Row-Level trigger
+এই trigger-টি প্রতিটি effected row জন্য আলাদা আলাদাভাবে active হয়। যদি একটি UPDATE command-এর মাধ্যমে 10 টি row পরিবর্তিত হয় তবে এই
+trigger-টি 10 বার execute হবে।
+
+data validation এবং প্রতিটি row-এর জন্য আলাদা ক্যালকুলেশন (যেমন: stock-এর পরিমাণ কমানো বা বাড়ানো) করার জন্য এটি ব্যবহার করা হয়।
+
+# Syntax Keyword: FOR EACH ROW
+
+2. Statement-Level Trigger
+এই trigger-টি পুরো SQL command-এর জন্য মাত্র একবার active হয়, তাতে যতগুলো row-ই পরিবর্তিত হোক না কেন। যদি 1000 টি row delete করে
+ফেলা হয়, তবুও এটি মাত্র একবারই run করবে।
+
+সাধারণত ডাটাবেসে বড় কোনো পরিবর্তনের summary audit log রাখা বা Security check করার জন্য এটি ব্যবহার করা হয়।
+
+# Syntax Keyword: FOR EACH STATEMENT (এটি default যদি কিছু উল্লেখ না করা হয়)।
+
+3. INSTEAD OF Trigger
+এটি একটি বিশেষ ধরনের trigger যা শুধুমাত্র View-এর ওপর কাজ করে।
+
+সাধারণত একটি View কোনো physical table নয় বরং এটি এক বা একাধিক টেবিলের ওপর ভিত্তি করে তৈরি করা একটি virtual টেবিল। যখন কোনো View
+একাধিক টেবিলকে JOIN করে তৈরি করা হয় তখন PostgreSQL সরাসরি জানে না যে ঐ View-তে কোনো ডেটা INSERT করলে তা ঠিক কোন টেবিলের কোন
+কলামে যাবে। এই সমস্যা সমাধানের জন্যই INSTEAD OF trigger ব্যবহার করা হয়।
+
+যখন কোনো user একটি View-এর ওপর INSERT, UPDATE, বা DELETE command চালায় তখন PostgreSQL-এর engine default ভাবে সেই কাজটির
+চেষ্টা করে। কিন্তু জটিল View-এর ক্ষেত্রে এটি Error raise করে।
+
+INSTEAD OF trigger ব্যবহার করলে engine ঐ main command-টিকে(insert, update or delete) সরাসরি execute করে না। বরং এটি main
+কাজটি থামিয়ে দেয় বা বাইপাস করে। অর্থাৎ user যে INSERT command-টি দিয়েছিল, সেটি সরাসরি কোনো টেবিলে ডেটা insert করবে না।
+
+main command-টি থামিয়ে দেওয়ার পর trigger তখন ঐ command-এর সাথে আসা ডেটাগুলোকে (যা NEW ভেরিয়েবলে থাকে) নিয়ে developer কর্তৃক লেখা
+trigger function-টি চালায়। ডেভেলপার তখন ঐ ফাংশনের ভেতরে manually লিখে দেন যে:
+- ডেটাটি আসলে কোন physical টেবিলের কোন কলামে যাবে।
+- একাধিক টেবিল থাকলে কোনটিতে আগে আর কোনটিতে পরে ডেটা ঢুকবে।
+- কোনো validation বা logic check করার প্রয়োজন আছে কি না।
+
+# Example
+-- Create Table Employees and addresses
+
+CREATE TABLE employees (
+    emp_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE addresses (
+    emp_id INT REFERENCES employees(emp_id),
+    city TEXT NOT NULL
+);
+
+-- Complex View Create
+CREATE VIEW v_employee_full_details AS
+SELECT employees.emp_id, employees.name, addresses.city
+FROM employees
+JOIN addresses ON employees.emp_id = addresses.emp_id;
+
+-- trigger function create
+এই ফাংশনটি main INSERT command-টি থামিয়ে দিয়ে ডেটাগুলোকে দুটি আলাদা টেবিলে ভাগ করে পাঠাবে।
+
+CREATE OR REPLACE FUNCTION func_instead_of_insert()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    new_emp_id INT;
+BEGIN
+    -- frist create employee then fetch that employee id
+    INSERT INTO employees (name)
+    VALUES (NEW.name)
+    RETURNING emp_id INTO new_emp_id;       # new generate হওয়া id-টি সরাসরি মেমরিতে ধরে রাখার জন্য RETURNING ... INTO ব্যবহার করা হয় instead of SELECT
+
+    -- from city by use employee id
+    INSERT INTO addresses (emp_id, city)
+    VALUES (new_emp_id, NEW.city);
+
+    -- INSTEAD OF trigger এ সাধারণত main কাজের পরিবর্তে logic শেষ করতে হয়
+    RETURN NULL;
+END;
+$$;
+
+-- INSTEAD OF trigger Implementation
+CREATE TRIGGER trg_instead_of_insert
+INSTEAD OF INSERT ON v_employee_full_details
+FOR EACH ROW
+EXECUTE FUNCTION func_instead_of_insert();
+
+
+-- যখন user নিচের command-টি চালাবে:
+INSERT INTO v_employee_full_details (name, city) VALUES ('Anik', 'Dhaka');
+
+- তখন engine দেখবে এটি একটি View এবং এর ওপর একটি INSTEAD OF trigger আছে।
+- engine মূল INSERT কাজটিকে View-তে হতে দেবে না (থামিয়ে দেবে)।
+- ফাংশনের ভেতর থাকা logic check অনুযায়ী, 'Anik' নামটি employees টেবিলে যাবে এবং 'Dhaka' city-টি addresses টেবিলে যাবে।
+- ইউজারের কাছে মনে হবে তিনি একটি ভার্চুয়াল টেবিলে ডেটা পাঠিয়েছেন, কিন্তু internal storage-এ ডেটাগুলো আলাদা আলাদা physical টেবিলে জমা হবে।
+
+
+-> Timing Type
+
+1. BEFORE
+যখন কোনো user data INSERT বা UPDATE করার জন্য command run করে, তখন সেই ডেটাটি টেবিলের স্থায়ী storage-এ save হওয়ার ঠিক আগের মুহূর্তে
+এই trigger active হয়। এটি মূলত একটি gateway বা filter হিসেবে কাজ করে। যদি এই ফাংশনটি কোনো কারণে NULL রিটার্ন করে তবে ডাটাবেস ইঞ্জিন
+main অপারেশনটি(like : insert, update) সেখানেই থামিয়ে দেয় এবং টেবিলে কোনো পরিবর্তন ঘটে না।
+
+# Example
+একটি e-commerce site-এ যখনই কোনো product name insert করা হবে তখন সেটি যেন সবসময় বড় হাতের অক্ষরে (Uppercase) save হয়।
+
+-- create function
+CREATE FUNCTION format_product_name()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.product_name = UPPER(NEW.product_name);
+    RETURN NEW;
+END;
+$$;
+
+-- create trigger
+CREATE TRIGGER trg_before_product_insert
+BEFORE INSERT ON products
+FOR EACH ROW
+EXECUTE FUNCTION format_product_name();
+
+যখন কোনো SQL command (যেমন: INSERT) চালানো হয় তখন ডেটাগুলো সরাসরি হার্ডডিস্কে যায় না। সেগুলো প্রথমে RAM-এর একটি অস্থায়ী জায়গায় জমা হয়, যাকে
+NEW record বলা হয়।
+
+BEFORE trigger সরাসরি এই RAM-এ থাকা ডেটার ওপর operation করার অনুমতি পায়। এটি টেবিলে ডেটা write হওয়ার আগেই সেই অস্থায়ী মানটিকে update
+করে দিয়ে নতুন কোনো মান বসিয়ে দিতে পারে। ফলে ডাটাবেস ইঞ্জিন যখন চূড়ান্তভাবে ডেটাটি ডিস্কে save করতে যায় তখন সে ইউজারের পাঠানো আসল ডেটাটি আর
+খুঁজে পায় না, বরং trigger যে মানটি বসিয়ে দিয়েছে সেটিই দেখতে পায় এবং সেটিই save করে।
+
+
+2. AFTER
+যখন main data টি টেবিলে successfully save হয়ে যায় এবং constraint (যেমন: Unique key বা Not Null) validation পাস করে তখন এই
+trigger run করে। এই পর্যায়ে এসে data already ডিস্কে বা মেমরিতে save হয়ে গেছে তাই এখানে NEW বা OLD রেকর্ডের মান আর পরিবর্তন করা সম্ভব নয়।
+
+এটি মূলত সেই সব কাজের জন্য ব্যবহৃত হয় যা মূল অপারেশনের ওপর নির্ভর করে। like audit log create করা বা অন্য কোনো টেবিলে automatically
+data update করা।
+
+# Exmaple :
+যখনই orders টেবিলে নতুন একটি অর্ডার আসবে, তখন অন্য একটি টেবিল stock থেকে ঐ পণ্যের পরিমাণ কমিয়ে দিতে হবে।
+
+-- Function Create
+CREATE FUNCTION update_stock_after_order()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE stock
+    SET quantity = quantity - NEW.order_quantity
+    WHERE product_id = NEW.product_id;
+
+    RETURN NULL;    -- AFTER ট্রিগারে রিটার্ন ভ্যালুর কোনো প্রভাব নেই
+END;
+$$;
+
+-- Trigger Define
+CREATE TRIGGER trg_after_order_insert
+AFTER INSERT ON orders
+FOR EACH ROW
+EXECUTE FUNCTION update_stock_after_order();
+

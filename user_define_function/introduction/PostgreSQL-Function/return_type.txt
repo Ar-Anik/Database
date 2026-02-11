@@ -1,0 +1,138 @@
+-> Return types in PostgreSQL
+1. RETURNS INTEGER
+2. RETURNS TEXT
+3. RETURNS BOOLEAN
+
+4. RETURNS NUMERIC
+NUMERIC is a decimal number data type that stores numbers exactly as humans write them. Examples it stores perfectly :
+            10, 3.14, 0.1, 123456789.99 etc.
+There is no rounding error like Other.
+
+-> NUMERIC and DECIMAL, They are the same type. PostgreSQL internally only has numeric.
+
+NUMERIC exists because of Computers naturally work in binary (base-2), but humans work in decimal (base-10).
+Binary cannot represent most decimal fractions, like :
+    0.1 represent as ≈ 0.10000000000000000555
+    0.2 represent as ≈ 0.20000000000000001110
+
+0.1 and 0.2 have no exact binary form. 0.1 in binary becomes an infinite repeating fraction.
+
+So PostgreSQL provides NUMERIC to:
+  - Store decimal numbers without loss
+  - Guarantee correct results
+
+In Floating Syste if we add, 0.1 + 0.2 it show 0.30000000000000004 because of 0.1 and 0.2 cannot be represented exactly in binary floating-point.
+but in NUMERIC it show, 0.1 + 0.2 = 0.3
+
+# Basic Syntax
+    - NUMERIC
+    - DECIMAL
+    - NUMERIC(p, s) here p is total number of digits and s is digit after decimal point
+
+Example :
+- Create Table
+CREATE TABLE payments (
+    amount NUMERIC          -- this allows any size, any precision.
+);
+
+- NUMERIC(10, 2)  so we write like this : 12345678.90
+
+
+-> :: meaning converting or type-casting
+    12.3456::NUMERIC(5,2)
+
+:: tells PostgreSQL, Convert the value on the left into the data type on the right.
+
+Think of like, value :: type
+
+So, 12.3456::NUMERIC(5,2) means :
+    - Take the value 12.3456
+    - Convert it into NUMERIC(5,2)
+    - Apply rounding rules of that type
+
+12.3456::NUMERIC(5,2) result is 12.35
+
+
+-> Unlike Other (like : DOUBLE PRECISION) NUMERIC is not fixed-size. It stores each decimal digit. Here Size grows
+with precision. Roughly PostgreSQL Manage ~ 2 bytes per 4 NUMERIC or DECIMAL digits
+
+So,
+   NUMERIC(5,2) is Small
+   NUMERIC(1000,500) is Large
+
+
+-> Example of Arithmetic behavior
+SELECT 10::NUMERIC / 3, 100::NUMERIC * 0.1, 1::NUMERIC - 0.9;
+
+-> Division precision rule
+PostgreSQL calculates as many digits as needed, then rounds if precision is constrained. like :
+    SELECT (10::NUMERIC / 3)::NUMERIC(5,2);     it result : 3.33
+
+-> Comparison behavior
+Comparisons are safe and deterministic. like :
+    SELECT 0.1::NUMERIC = 0.10::NUMERIC;        it result : true
+
+
+5. Return a single row
+
+-- create function
+CREATE FUNCTION get_user()
+RETURNS TABLE(id INT, name TEXT)
+LANGUAGE sql
+AS $$
+    SELECT 1, 'Anik';
+$$;
+
+-- call function
+SELECT * FROM get_user();
+
+
+6. Return multiple rows
+
+-- create function
+CREATE FUNCTION get_series()
+RETURNS SETOF INTEGER
+LANGUAGE sql
+AS $$
+    SELECT generate_series(1, 10)
+$$;
+
+-- call function
+SELECT * FROM get_series();
+
+
+7. Return SET of Row by `RETURN QUERY` From PostgreSQL
+
+-- if i write this
+CREATE FUNCTION get_emp()
+RETURNS TABLE(id INT, name TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    select employees.id, employees.name
+    from employees;
+END;
+$$;
+
+select get_emp();
+
+it show error like :
+[42601] ERROR: query has no destination for result data Hint: If you want to discard the results of a SELECT, use
+PERFORM instead. Where: PL/pgSQL function get_emp() line 3 at SQL statement
+
+Above error menas :
+PostgreSQL executed a SELECT, but no one told it what to do with the rows.
+
+We see that above function we use RETURNS TABLE(...), But RETURNS TABLE only defines the shape of the output, it does
+NOT automatically collect query results. For Collect the Result we use : RETURN QUERY
+
+create function get_emp()
+RETURNS TABLE(id INT, name TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT employees.id, employees.name FROM employees;
+END;
+$$;
+

@@ -1,0 +1,236 @@
+Link : https://www.geeksforgeeks.org/postgresql/postgresql-trigger/
+
+-> PostgreSQL-এ trigger হলো একটি database object যা কোনো নির্দিষ্ট table বা view-তে data পরিবর্তন (INSERT, UPDATE, DELETE) বা
+transaction লেভেলে কোনো event ঘটলে automatically একটি নির্দিষ্ট ফাংশনকে call করে।
+
+এটি মূলত Event-Condition-Action (ECA) মডেলে কাজ করে:
+- Event: ডেটাবেসে কোনো পরিবর্তন।
+- Condition: optional condition (WHEN clause)।
+- Action: একটি Stored Function run করা।
+
+
+-> যখন কোনো trigger active হয় তখন PostgreSQL internal ভাবে কিছু special object তৈরি করে। এগুলো
+সাধারণ ভেরিয়েবলের মতো নয় বরং এগুলো সরাসরি টেবিলের নির্দিষ্ট Row ডেটা এবং system information বহন করে।
+
+1. NEW
+এটি একটি RECORD টাইপ ভেরিয়েবল। এর কাজ হলো কোনো অপারেশনের মাধ্যমে আসা নতুন বা সংশোধিত ডেটা ধারণ করা।
+- INSERT: নতুন যে ডেটাটি টেবিলে entry করার জন্য submit করা হয়েছে, NEW তার পুরো copy ধারণ করে।
+- UPDATE: Update করার পর ঐ row-টির নতুন চেহারা কেমন হবে, সেই মানটি NEW-তে থাকে।
+- DELETE: যেহেতু ডিলিট করার সময় নতুন কোনো ডেটা আসে না, তাই এটি তখন NULL থাকে।
+
+Usage : BEFORE trigger-এ NEW.salary = 5000; এভাবে ডেটা পরিবর্তন করলে টেবিলে ঐ পরিবর্তিত মানটিই save হয়।
+
+2. OLD
+এটি একটি RECORD টাইপ ভেরিয়েবল, তবে এটি শুধুমাত্র টেবিলে আগে থেকে থাকা data ধারণ করে।
+- UPDATE: data update করার ঠিক আগে টেবিলে কী মান ছিল, তা OLD ভেরিয়েবলে থাকে।
+- DELETE: যে row-টি মুছে ফেলা হচ্ছে, তার আগের পুরো তথ্য OLD-তে সংরক্ষিত থাকে।
+- INSERT: যেহেতু আগে কোনো data ছিল না, তাই এটি তখন NULL থাকে।
+
+Usage: মূলত audit log রাখার জন্য বা আগের মানের সাথে নতুন মানের তুলনা করতে (IF NEW.price != OLD.price) এটি ব্যবহৃত হয়।
+
+3. TG_OP
+এটি একটি text ভ্যালু যা দিয়ে বোঝা যায় কোন command-এর কারণে trigger-টি রান করছে। এটি মূলত চারটি মান প্রদান করে: INSERT, UPDATE,
+DELETE অথবা TRUNCATE।
+
+Usage: যদি একই function একাধিক ইভেন্টের জন্য ব্যবহার করা হয়, তবে এর মাধ্যমে আলাদা আলাদা logic check করা যায়। like :
+IF (TG_OP = 'INSERT') THEN -- insert logic
+ELSIF (TG_OP = 'DELETE') THEN -- delete logic
+END IF;
+
+4. TG_NAME এবং TG_TABLE_NAME
+- TG_NAME: এটি বর্তমানে কার্যকর হওয়া trigger-টির নাম ধারণ করে। এটি মূলত debuging বা error মেসেজে কোন trigger কাজ করছে তা দেখানোর জন্য
+ব্যবহৃত হয়।
+
+- TG_TABLE_NAME: যে টেবিলের ওপর operation চলছে তার নাম। যদি একটি ফাংশন অনেকগুলো টেবিলে trigger হিসেবে ব্যবহার করা হয় তবে এটি দিয়ে
+বর্তমান টেবিলটি শনাক্ত করা যায়।
+
+5. FOR EACH ROW
+এটি একটি trigger define করার সময় ব্যবহার করা হয়। এটি নির্দেশ করে যে একটি SQL query দ্বারা যদি 100 টি row effected হয় তবে trigger
+function-টি 100 বারই আলাদা আলাদাভাবে run করবে।
+
+Usage: যখন প্রতিটি ইন্ডিভিজুয়াল সারির ডেটা পরিবর্তন বা validation করার প্রয়োজন হয়।
+
+6. FOR EACH STATEMENT
+এটি নির্দেশ করে যে পুরো SQL command-এর জন্য ফাংশনটি মাত্র একবারই চলবে। যদি 1000 টি row delete করা হয় তবুও এটি মাত্র একবারই কাজ করবে।
+
+Usage: বড় কোনো অপারেশনের শেষে একটি just log generate করার জন্য এটি ব্যবহৃত হয়। উল্লেখ্য যে এখানে NEW বা OLD ভেরিয়েবলগুলো কাজ করে না।
+
+
+-> Trigger Syntax
+PostgreSQL-এ একটি trigger তৈরি করার আগে একটি trigger function তৈরি করতে হয়। তারপর trigger create করতে হয়, যা একটি নির্দিষ্ট
+table বা view-এর সাথে ঠিক একটি trigger function-কে bind করে।
+
+-- Basic Syntax of Trigger Function
+Trigger Function হলো একটি বিশেষ ধরনের ফাংশন যা TRIGGER return করে। যখনই কোনো trigger fire হয়, তখন এই ফাংশনটি system দ্বারা automatically execute হয়।
+
+CREATE OR REPLACE FUNCTION function_name()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- trigger logic here
+
+    RETURN NEW;   -- or OLD, or NULL (depends on trigger type)
+END;
+$$;
+
+Here,
+- RETURNS TRIGGER is Required — trigger functions cannot return other types
+- Trigger function Must return NEW, OLD or NULL
+
+-- Basic Syntax of Trigger
+একটি trigger, টেবিলের কোনো event-এর (যেমন: INSERT, UPDATE বা DELETE) সাথে একটি trigger function-এর সংযোগ স্থাপন করে।
+
+CREATE TRIGGER trigger_name
+{ BEFORE | AFTER | INSTEAD OF }
+{ INSERT | UPDATE | DELETE | TRUNCATE }
+ON table_name
+FOR EACH { ROW | STATEMENT }
+WHEN (condition)        --- WHEN clause is Optional
+EXECUTE FUNCTION function_name();
+
+
+-- suppose we have a table
+CREATE TABLE office (
+    id SERIAL PRIMARY KEY,
+    employee_name TEXT NOT NULL,
+    salary NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+-- insert data
+INSERT INTO office (employee_name, salary)
+VALUES
+('Anik', 50000),
+('Robin', 60000),
+('Oni', 55000);
+
+- First create tigger Function
+CREATE FUNCTION check_salary_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- check condition
+    IF NEW.salary < OLD.salary THEN
+        RAISE EXCEPTION 'Salary reduction is not possible.';
+    END IF;
+
+    -- NEW value update
+    NEW.updated_at = NOW();
+
+    -- return updated value
+    RETURN NEW;
+END;
+$$;
+
+-- create trigger
+CREATE TRIGGER salary_guard
+BEFORE UPDATE ON office
+FOR EACH ROW
+WHEN (
+    OLD.salary IS  DISTINCT FROM NEW.salary
+) EXECUTE FUNCTION check_salary_update();
+
+-- if we update office
+UPDATE office
+SET salary = 10000
+WHERE employee_name = 'Robin';
+
+show error like :
+[P0001] ERROR: Salary reduction is not possible. Where: PL/pgSQL function check_salary_update() line 5 at RAISE
+
+
+-> usage of trigger
+- Audit Log: ডাটাবেসের কোনো টেবিলে কে কখন এবং কী পরিবর্তন করেছে তা trace করার জন্য এটি সবচেয়ে কার্যকর। কোনো ডেটা UPDATE বা DELETE করার
+সময় trigger automatically আগের মান এবং পরের মান একটি আলাদা audit টেবিলে write করে রাখে।
+
+- Complex Data Validation: সাধারণ CHECK constraint যখন পর্যাপ্ত হয় না তখন trigger ব্যবহার করা হয়।
+
+- Automatic Data Population: এক টেবিলের ডেটার ওপর ভিত্তি করে অন্য টেবিলের data update করা। যেমন: orders টেবিলে নতুন order আসলে inventory
+টেবিলের stock quantity কমিয়ে দেওয়া।
+
+- Manual Cascading Delete: যখন ডাটাবেসের Foreign Key constraint ছাড়াই manually relational data delete করে ফেলার প্রয়োজন হয়, তখন
+trigger ব্যবহার করে child রেকর্ডের ওপর নির্দিষ্ট logic check সম্পন্ন করা যায়।
+
+
+-> Where triggers should not be used
+- System Catalog Tables: PostgreSQL-এর internal system catalog (যেমন: pg_class, pg_trigger, pg_attribute) টেবিলের ওপর
+manually কোনো trigger বসানো যায় না। এগুলো ডাটাবেস engine দ্বারা নিয়ন্ত্রিত এবং এর কোনো পরিবর্তন পুরো ডাটাবেসকে crush করাতে পারে।
+
+- High-Performance / High-Concurrency Tables: যে টেবিলে প্রতি সেকেন্ডে হাজার হাজার transaction ঘটে, সেখানে Row-level trigger এড়িয়ে চলা
+উচিত। প্রতিটি row-এর জন্য একটি করে ফাংশন execute করা ডাটাবেসের latency বাড়িয়ে দেয় এবং সিস্টেমকে slow করে দেয়।
+
+- Debugging and Complexity: খুব জটিল business logic যদি trigger-এর ভেতরে রাখা হয়, তবে সেটি debug করা কঠিন হয়ে পড়ে। কারণ application
+থেকে error আসলে অনেক সময় বোঝা যায় না যে এটি main কোড থেকে নাকি ডাটাবেস trigger থেকে আসছে।
+
+
+-> Trigger Disable :
+যখন কোনো trigger-কে delete না করে শুধুমাত্র তার কাজ বন্ধ করে রাখার প্রয়োজন হয় তখন ALTER TABLE command ব্যবহার করা হয়।
+এটি ব্যবহার করলে trigger-টি database catalog-এ সংরক্ষিত থাকে, কিন্তু টেবিলের ওপর কোনো event (INSERT, UPDATE, DELETE) occure হলে সেটি
+আর execute হয় না। অর্থাৎ এটি একটি "সুইচ বন্ধ করার" মতো কাজ করে।
+
+-- Command
+ALTER TABLE table_name DISABLE TRIGGER trigger_name;
+
+# Example
+ALTER TABLE office DISABLE TRIGGER salary_guard;
+
+-> Trigger ENABLE :
+Disable Trigger-কে Enable করা যায়
+
+-- Command
+ALTER TABLE table_name ENABLE TRIGGER trigger_name;
+
+# Example
+ALTER TABLE office ENABLE TRIGGER salary_guard;
+
+
+-> Trigger Delete
+
+-- Command
+DROP TRIGGER trigger_name ON table_name;
+
+-- Example
+DROP TRIGGER salary_guard ON Office
+
+Trigger delete করার সময় মনে রাখা প্রয়োজন যে Trigger Delete করলেও সংশ্লিষ্ট trigger function-টি কিন্তু database থেকে delete হয় না। সেটি
+আলাদা একটি object হিসেবে থেকে যায়। যদি ফাংশনটিও আর প্রয়োজন না হয়, তবে সেটিকে আলাদাভাবে DROP FUNCTION command দিয়ে delete করতে হয়।
+
+-- Practice from geek for geeks
+CREATE TABLE COMPANY (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INT NOT NULL,
+    address CHAR(50),
+    salary NUMERIC(10, 4)
+);
+
+CREATE TABLE AUDIT(
+    id SERIAL PRIMARY KEY,
+    date DATE
+);
+
+CREATE FUNCTION auditlog()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO AUDIT(id, date) VALUES (NEW.id, current_timestamp);
+    RETURN NEW;
+END;
+$$;
+
+
+CREATE TRIGGER test_trigger
+AFTER INSERT ON COMPANY
+FOR EACH ROW
+EXECUTE FUNCTION auditlog();
+
+INSERT INTO COMPANY(name, age, address, salary) VALUES ('Anik', 14, 'Dhaka', 3589);
+
+SELECT * FROM COMPANY;
+
+-- Practice End
+
