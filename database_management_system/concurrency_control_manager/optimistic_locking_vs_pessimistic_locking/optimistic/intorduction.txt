@@ -1,0 +1,38 @@
+Optimistic Locking হলো computer system-এ ব্যবহৃত একটি concurrency control mechanism, বিশেষ করে database-এ। এটি shared
+resources access manage করতে ব্যবহৃত হয়। এটি এই ধারণার উপর base করে কাজ করে যে, data ব্যবহারের সময় একাধিক user/process-এর
+মধ্যে conflict হওয়ার সম্ভাবনা খুবই কম।
+
+-> Key Concepts of Optimistic Locking
+1. Validation Before Commit:
+একই সময়ে একাধিক user-কে data c করতে বাধা দেওয়ার পরিবর্তে, Optimistic Locking conflict যাচাই করার কাজটি data commit করার সময়
+পর্যন্ত স্থগিত রাখে। এটি প্রতিটি transaction-কে কোনো ধরনের বাধা ছাড়াই স্বাধীনভাবে কাজ করার সুযোগ দেয়। এই পদ্ধতিটি এমন একটি ধারণার উপর ভিত্তি করে
+কাজ করে যে, data নিয়ে কাজ করার সময় সাধারণত transaction গুলোর মধ্যে কোনো conflict তৈরি হবে না।
+
+2. Validation at Commit Time):
+Access ডেটার change গুলো save/commit করার আগে, system data validation করে। এটি পরীক্ষা করে দেখে, বর্তমান transaction শুরু হওয়ার পর
+থেকে অন্য কোনো transaction একই data ইতোমধ্যে পরিবর্তন করেছে কি না। এই validation সাধারণত ডেটার সাথে যুক্ত version number বা timestamp
+মিলিয়ে করা হয়।
+যদি version বা timestamp পরিবর্তিত পাওয়া যায়, তাহলে বোঝা যায় যে অন্য কেউ data-টি update করেছে অর্থাৎ একটি conflict ঘটেছে।
+
+3. Handling Conflicts:
+validation ধাপে যদি কোনো conflict ধরা পড়ে অর্থাৎ বর্তমান transaction চলাকালীন অন্য কোনো transaction একই data পরিবর্তন করে থাকে তাহলে
+system প্রয়োজন অনুযায়ী ব্যবস্থা নেয়। এই ক্ষেত্রে বর্তমান transaction-টি rollback করা হতে পারে। অথবা last updated data নিয়ে পুরো change-টি
+আবার retry করার জন্য নির্দেশ দেওয়া হতে পারে।
+
+
+-> Advantages
+1. Reduced contention: এটি কোনো resource-কে block না করেই একাধিক process-কে কাজ করার অনুমতি দেয়, যা সামগ্রিকভাবে system-এর গতি
+বা concurrency বৃদ্ধি করে।
+
+2. Minimal locking overhead: এখানে transaction-গুলো স্বাধীনভাবে সম্পন্ন হয়, যার ফলে বারবার lock করা বা lock manage করার বাড়তি ঝামেলা
+ও সময় ব্যয় কমে যায়।
+
+
+-> Disadvantages
+1. Increased chances of conflicts: যদি একই সময়ে অনেক user একই data নিয়ে কাজ করে, তবে বারবার transaction পুনরায় শুরু করতে হতে
+পারে। এর ফলে অতিরিক্ত logic check এবং কাজের জটিলতা বেড়ে যায়।
+
+2. Not suitable for highly contended resources: যেসব ক্ষেত্রে ঘনঘন conflict হওয়ার সম্ভাবনা থাকে, সেখানে Optimistic Locking খুব একটা
+efficient approach নয়।
+
+

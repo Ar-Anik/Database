@@ -1,0 +1,63 @@
+MySQL-এ Query Level-এ Optimistic Locking implement করার জন্য মূলত একটি Version-based mechanism ব্যবহার করা হয়। এটি বাস্তবায়নের জন্য
+কোনো অতিরিক্ত Database locking (যেমন: SELECT ... FOR UPDATE) প্রয়োজন হয় না, বরং সাধারণ SQL Logic ব্যবহার করেই ডেটার Integrity রক্ষা
+করা যায়।
+
+Optimistic Locking-এর জন্য টেবিলে অবশ্যই একটি বিশেষ column থাকতে হবে যা প্রতিটি Successful আপডেটের সাথে পরিবর্তিত হয়। সাধারণত একে version
+বা timestamp বলা হয়। এখানে একটি accounts টেবিলের example দেওয়া হলো:
+
+CREATE TABLE accounts (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    balance DECIMAL(10, 2),
+    version INT DEFAULT 0
+);
+
+-- insert row
+INSERT INTO accounts (id, name, balance, version)
+VALUES (1, 'Alice', 1000.00, 0);
+
+
+-> Optimistic Locking মূলত 3 টি step-এ সম্পন্ন হয়:
+
+Step-1: The Read Phase
+প্রথমে Database থেকে কাঙ্ক্ষিত Row এবং তার বর্তমান version number read করা হয়। এই সময় কোনো locking use করা হয় না, ফলে অন্য user
+ও একই data read করতে পারে।
+
+SELECT balance, version
+INTO @current_balance, @current_version
+FROM accounts
+WHERE id = 1;
+
+ধরা যাক, এখান থেকে @current_balance = 1000.00 এবং @current_version = 0 পাওয়া গেল। এই মানগুলো application memory-তে সংরক্ষণ করা হয়।
+
+Step-2: Logic & Calculation
+এই ধাপে application নিজের business logic অনুযায়ী নতুন value calculate করে। suppose new balance value calculate করা হলো 1000 + 500 = 1500
+
+SET @new_balance = @current_balance + 500;
+
+এই step-এ database-এ কোনো value update করা হয় না। শুধু নতুন value prepare করা হয়।
+
+Step-3: Conditional Update & Execute
+Data commit করার সময় একটি মাত্র UPDATE command ব্যবহার করা হয়, যেখানে WHERE clause-এ আগের বার read করা version number-টি মিলিয়ে দেখা হয়।
+
+UPDATE accounts
+SET balance = @new_balance, version = @current_version + 1
+WHERE id = 1 AND version = @current_version;
+
+
+-> Internal Mechanism and Result Analysis
+যখন এই UPDATE command execute হয়, তখন MySQL Storage Engine নিচের logic গুলো Check করে:
+* Success: যদি WHERE clause এর condition অনুযায়ী version = 0 পাওয়া যায়, তবেই data upate হবে। এই ক্ষেত্রে affected_row এ version
+column-এর মান 1 increment হবে। system নিশ্চিত করবে যে data read করার সময় থেকে update করার সময় পর্যন্ত অন্য কেউ এই data update করেনি।
+
+* Conflict: যদি update করার ঠিক আগের মুহূর্তে অন্য কোনো transaction ডেটাটি update করে ফেলে, তবে ডাটাবেসে version এর value match করবে
+না, ফলে update হবে না এবং affected_row এর মান 0 আসবে।
+
+
+-> Conflict handling and retry or Automatic Retry
+যখন affected_rows এর মান 0 আসে, তখন বুঝতে হবে একটি Conflict হয়েছে। এই পরিস্থিতি handle করার জন্য নিচের পদ্ধতি অনুসরণ করা হয়:
+* Retry System: application স্বয়ংক্রিয়ভাবে আবার Step-1 থেকে শুরু করবে। অর্থাৎ নতুন version number read করবে এবং আবার Step-3 এ update
+করার চেষ্টা করবে।
+
+* Exception: যদি কয়েকবার চেষ্টার পরেও tracsaction successful না হয়, তবে system একটি error message দিয়ে অপারেশনটি cancel করবে।
+

@@ -1,0 +1,174 @@
+Pessimistic lock যেখানে database engine ধরে নেয় যে একই সময়ে একাধিক transaction data পরিবর্তন করার চেষ্টা করবে। তাই এটি কোনো row
+read বা update করার আগে সরাসরি সেটিকে lock করে দেয়।
+
+1. Exclusive Lock(SELECT ... FOR UPDATE)
+এটি powerful locking command। যখন কোনো transaction এই command টি ব্যবহার করে কোনো row select করে, তখন সেই row-টির ওপর একটি
+Exclusive lock পড়ে যায়। তখন অন্য কোনো transaction সেই row-টি update, delete বা অন্য কোনো locking read (যেমন FOR SHARE) করতে
+পারে না।
+এই lock ব্যবহার করা হয়, যখন কোনো data read করার পর তার ওপর ভিত্তি করে write বা update করতে হয়। যেমন: ব্যাংকের ব্যালেন্স চেক করে টাকা কাটা।
+
+-> Query Example in Mysql:
+locking শুধুমাত্র একটি active transaction-এর মধ্যে কার্যকর হয়। START TRANSACTION command-এর মাধ্যমে এটি শুরু করতে হয়। COMMIT এর মাধ্যমে
+শেষ করতে হয়।
+
+# Create accounts table
+CREATE TABLE accounts (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    balance DECIMAL(15, 2)
+);
+
+INSERT INTO accounts (id, name, balance) VALUES
+(1, 'Arif Rahman', 5000.00),
+(2, 'Sultana Ahmed', 12500.50),
+(3, 'Tanvir Hasan', 0.00),
+(4, 'Momena Begum', 25000.75);
+
+START TRANSACTION;
+SELECT balance FROM accounts WHERE id = 2 FOR UPDATE;
+
+UPDATE accounts SET balance = balance - 100 WHERE id = 2;
+COMMIT;    # lock release here
+
+Suppose session-1 উপরের query execute করে :
+* START TRANSACTION এর মাধ্যমে Transaction টি start করা হয়
+* id = 2 row-টির ওপর FOR UPDATE lock করা হয়
+* এই অবস্থায় অন্য যেকোনো session যদি id = 2 পরিবর্তন করতে চায়, তবে database system তাকে Waiting state-এ রাখবে।
+* COMMIT এর মাধ্যমে Transaction টি শেষ করা হয় এবং lock release করা হয়
+
+
+2. Shared Lock: SELECT ... FOR SHARE
+SELECT ... FOR SHARE, mechanism টি মূলত তখন ব্যবহৃত হয় যখন Data consistency বজায় রাখা প্রয়োজন কিন্তু অন্যদের read access বন্ধ করার
+দরকার নেই। এটি একটি Shared Lock প্রদান করে।
+
+যখন কোনো transaction একটি নির্দিষ্ট data-এর উপর FOR SHARE command প্রয়োগ করে, তখন database engine data টিকে একটি shared অবস্থায়
+নিয়ে যায়। এর ফলে system-এর অন্য যেকোনো user বা process একই সময়ে data-টি read করতে পারে। তবে এর মূল বৈশিষ্ট্য হলো, যতক্ষণ পর্যন্ত এই
+lock-টি Active থাকে, ততক্ষণ অন্য কেউ data-টি update বা write করতে পারে না।
+
+ধরা যাক, একটি inventory management system-এ কোনো একটি পণ্যের stock check করা হচ্ছে। যদি সেখানে FOR SHARE ব্যবহার করে query চালানো
+হয়, তবে এটি নিশ্চিত করবে যে stock check করার সময় অন্য কোনো process যেন ওই পণ্যের পরিমাণ কমিয়ে না দেয়। এই অবস্থায় অন্য কোনো transaction
+যদি একই সাথে ঐ stock read করতে চায়, তবে database তাকে অনুমতি দেবে। কিন্তু কেউ যদি ঐ stock কমানোর জন্য update করার চেষ্টা করে, তবে তাকে
+waiting বা block অবস্থায় থাকতে হবে। যতক্ষণ না প্রথম transaction টি commit বা rollback হয়, ততক্ষণ পর্যন্ত কোনো write operation সেখানে
+execute হতে পারবে না।
+
+-> Query Example in Mysql:
+
+START TRANSACTION;
+SELECT * FROM accounts WHERE id = 4 FOR SHARE;
+COMMIT;
+
+
+-> Pessimistic locking without an index will block all other transactions and cause system performance to drop, How?
+MySQL-এর InnoDB storage engine কোনো Data টেবিলের physical row সরাসরি lock করার পরিবর্তে ঐ row-এর সাথে যুক্ত index entry বা record-এর
+উপর lock apply করে। এর সহজ মানে হলো, যখন কোনো transaction একটি নির্দিষ্ট data খোঁজে, তখন engine সরাসরি data file-টিতে না গিয়ে প্রথমে index
+ফাইলে যায়। locking প্রক্রিয়াটি সেই index ফাইলের নির্দিষ্ট record-এ একটি signal বা lock বসিয়ে দেয়। এর ফলে database system বুঝতে পারে যে এই index
+দ্বারা নির্দেশিত row-টি বর্তমানে একটি নির্দিষ্ট অপারেশনের অধীনে আছে এবং অন্য কেউ এটি পরিবর্তন করতে পারবে না।
+
+যখন কোনো টেবিলে primary key বা কোনো unique index থাকে, তখন locking প্রক্রিয়াটি অত্যন্ত নিখুঁত এবং কার্যকর হয়। উদাহরণস্বরূপ, যদি একটি locking
+query WHERE id = 10 ব্যবহার করে চালানো হয়, তবে engine সরাসরি index tree-তে গিয়ে id 10 record-এর উপর একটি lock বসায়। যেহেতু এটি শুধুমাত্র
+একটি নির্দিষ্ট index record-কে lock করছে, তাই টেবিলের অন্য সব row বা record গুলো other user-দের জন্য উন্মুক্ত থাকে। এটি system-এর কনকারেন্সি বা
+একই সাথে একাধিক কাজ করার ক্ষমতা বৃদ্ধি করে।
+
+বিপরীতভাবে যদি কোনো query-দ্বারা index ব্যবহার করা না হয়, তবে পরিস্থিতির মারাত্মক পরিবর্তন ঘটে। যখন engine কোনো index খুঁজে পায় না, তখন তাকে পুরো
+টেবিলটি scan করতে হয়। এই scaning প্রক্রিয়ার সময় InnoDB প্রতিটি record check করে এবং প্রতিটি record-এর উপর locking প্রয়োগ করে যেতে থাকে। এর
+ফলে একটি সাধারণ row-level lock কার্যত একটি table-level lock-এ পরিণত হয়। এটিই মূলত কারণ কেন index ছাড়া pessimistic lock করলে অন্য সকল
+transaction আটকে যায় এবং system-এর performance drop করে।
+
+InnoDB মূলত Clustered Index architecture ব্যবহার করে যেখানে data এবং index physically একই সাথে অবস্থান করে। যখন কোনো index record lock
+করা হয়, তখন এটি মূলত ঐ ডেটার মূল ঠিকানায় তালা লাগিয়ে দেওয়ার মতো কাজ করে। এই সূক্ষ্ম locking mechanism-টি নিশ্চিত করে যে কোনো internal write
+operation চলাকালীন অন্য কোনো transaction ঐ একই index path ব্যবহার করে data update বা Inconsistent read করতে পারবে না। storage level
+এ ডেটার সুরক্ষা এবং দ্রুত access নিশ্চিত করার জন্য index record-এর উপর lock প্রয়োগ করা InnoDB-এর একটি One of the strongest features।
+
+locking-এর এই প্রক্রিয়াটি মূলত ডেটাবেসের Transaction Isolation Level-এর ওপর ভিত্তি করে কাজ করে। সাধারণত READ COMMITTED বা REPEATABLE READ
+Isolation Level-এ index locking-এর ধরন কিছুটা ভিন্ন হতে পারে। তবে main logic একই থাকে, সঠিক index ব্যবহার করলে locking হবে specific
+and fast, আর index না থাকলে locking হবে slow এবং expansive।
+
+Q : Transaction Isolation Level কী?
+-> ডেটাবেসে একই সময়ে হাজার হাজার transaction চলতে থাকে। Isolation Level হলো এমন কিছু rules set যা ঠিক করে দেয় একটি transaction অন্যটির
+থেকে কতটা আলাদা বা বিচ্ছিন্ন থাকবে।
+
+1. READ COMMITTED: এই লেভেলে Database শুধুমাত্র সেই রেকর্ডগুলো লক করে যেগুলোর ওপর সরাসরি Operation চালানো হচ্ছে। এটি কিছুটা Flexible।
+
+2. REPEATABLE READ (MySQL default): এটি আরও strict। এখানে শুধুমাত্র নির্দিষ্ট row নয়, বরং দুটি record-এর মাঝখানের ফাঁকা জায়গা বা 'Gap' গুলোও
+lock করে দেওয়া হয়। একে বলা হয় Gap Locking। এর ফলে অন্য কেউ ঐ range মধ্যে নতুন কোনো data insert করতে পারে না।
+
+
+-> FOR SHARE vs FOR UPDATE
+FOR UPDATE এবং FOR SHARE এর মধ্যে মূল পার্থক্যটি locking behaviour মধ্যে নিহিত। FOR UPDATE অনেকটা নিজের জন্য পুরো resource-টি দখল করে নেওয়ার
+মতো, যেখানে অন্য কাউকেই কাছে ঘেঁষতে দেওয়া হয় না। অন্যদিকে FOR SHARE হলো এমন একটি পদ্ধতি যেখানে read করার অনুমতি সবার থাকে কিন্তু write/update
+করার অধিকার কারো থাকে না। এই mechanism-টি উচ্চ concurrency নিশ্চিত করতে সাহায্য করে, কারণ read অপারেশনগুলো একে অপরকে block করে না। তবে
+deadlock হওয়ার একটি সূক্ষ্ম সম্ভাবনা এখানে থাকে suppose যদি দুটি different transaction(t1 and t2) একই row-এর ওপর SHARE lock নিয়ে বসে থাকে
+এবং then তারা উভয়ই একই সময়ে সেটিকে update করার চেষ্টা করে, তবে internal logic check অনুযায়ী কেউই আগাতে পারবে না কারণ তারা একে অপরের lock
+release হওয়ার জন্য wait করবে।
+
+
+-> Pessimistic Locking অনেক সময় expectation অনুযায়ী কাজ না-ও করতে পারে। এর পেছনে main কারণগুলো হলো :
+1. Not Working:
+যদি START TRANSACTION command ব্যবহার না করে সরাসরি SELECT ... FOR UPDATE চালানো হয় এবং ডেটাবেসে autocommit চালু থাকে, তবে query শেষ
+হওয়ার সাথে সাথেই lock release হয়ে যাবে। ফলে অন্য transaction সাথে সাথেই data update/write করে ফেলতে পারবে। এটি একটি সাধারণ ভুল।
+
+2. Performance Failure:
+FOR SHARE/FOR UPDATE এর ক্ষেত্রে, যে সব column-এর উপর index create করা নাই যদি WHERE close-এ ঐ সব column ব্যবহার query হয়, তবে InnoDB
+পুরো টেবিলের প্রতিটি index record-এর উপর lock apply করার চেষ্টা করে। এর ফলে একটি row lock করতে গিয়ে পুরো টেবিল block হয়ে যায়, যা system-কে
+স্থবির করে দেয়।
+
+Example :
+এখন ধরা যাক, 2 জন user আলাদা দুটি session থেকে আলাদা দুটি row update করতে চাইছেন।
+
+CREATE TABLE lk_cstmer (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    city VARCHAR(100)
+) ENGINE=InnoDB;
+
+INSERT INTO lk_cstmer (id, name, city) VALUES
+(1, 'Arif', 'Dhaka'),
+(2, 'Sultana', 'Chittagong'),
+(3, 'Tanvir', 'Sylhet');
+
+
+User-1 : Session-1 চাচ্ছে শুধুমাত্র 'Dhaka' শহরের গ্রাহকদের lock করতে। কিন্তু যেহেতু city কলামে কোনো index নেই, তাই engine জানে না 'Dhaka' কোথায়
+আছে।
+
+START TRANSACTION;
+
+-- city কলামে index না থাকায় এটি পুরো টেবিল scan করবে
+SELECT * FROM customers
+WHERE city = 'Dhaka'
+FOR UPDATE;
+-- এই অবস্থায় Session-1 এখনো COMMIT বা ROLLBACK করেনি।
+
+User-2 : Session-2 চাচ্ছে 'Sylhet' শহরের গ্রাহককে Update করতে। logically 'Dhaka' এবং 'Sylhet' আলাদা, তাই Session-2 এর কাজ আটকে যাওয়ার
+কথা নয়। কিন্তু বাস্তবে এটি আটকে যাবে।
+
+START TRANSACTION;
+
+-- এই কুয়েরিটি এখন Blocked হয়ে থাকবে
+UPDATE customers SET name = 'Tanvir Ahmed' WHERE city = 'Sylhet';
+
+
+3. Deadlock:
+FOR SHARE ব্যবহারের সময় যদি Session-1 এবং Session-2 উভয়ই একই row-তে Share Lock নেয় এবং এরপর উভয়ই একই সময়ে Update করার চেষ্টা করে, তবে
+কোনোটিই সফল হবে না। Database engine তখন একটি transaction-কে জোরপূর্বক kill করে দেয়।
+
+4. Isolation Level Check :
+যদি Database Isolation Level-এ READ UNCOMMITTED থাকে, তবে Pessimistic locking-এর কার্যকারিতা প্রশ্নবিদ্ধ হতে পারে। সবসময়
+REPEATABLE READ(MySQL Default) বা READ COMMITTED, Isolation Level-এ সবচেয়ে ভালো কাজ করে।
+
+Q : Dirty Read কী?
+-> কোনো একটি transaction (ধরা যাক Sessoion-1) কোনো Data পরিবর্তন করেছে কিন্তু সেটি এখনো COMMIT করেনি। এই অবস্থায় অন্য একটি transaction
+(Session-2) যদি ঐ পরিবর্তন করা data-টি read করতে পারে, তবে তাকে Dirty Read বলা হয়।
+
+Dirty Read বিপজ্জনক কারণ যদি session-1 শেষ পর্যন্ত কোনো কারণে কাজ সম্পন্ন করতে না পেরে ROLLBACK করে, তবে session-2 যে data-টি read করেছিল
+তা False বা ভুল প্রমাণিত হবে। কারণ ঐ data-টি কখনোই database storage-এ save হয়নি।
+
+READ UNCOMMITTED হলো ডেটাবেসের সবচেয়ে Flexible Isolation Level। এই লেভেলের প্রধান বৈশিষ্ট্য হলো এটি Dirty Read করার অনুমতি দেয়।
+
+Pessimistic locking এর main theory হলো—"আগে lock করো, তারপর কাজ করো"। এটি নিশ্চিত করে যে lock থাকা অবস্থায় অন্য কেউ data পরিবর্তন
+করবে না। কিন্তু READ UNCOMMITTED ব্যবহার করলে নিচের সমস্যাগুলো দেখা দেয়:
+1. Logical Sequence break: Session-1 একটি row-এর উপর FOR UPDATE lock নিয়ে data update করছে। session-2 যদি READ UNCOMMITTED
+level-এ থাকে, তবে সে session-1 এর lock release হওয়ার অপেক্ষা না করেই ঐ অসম্পূর্ণ বা uncommitted data read করে ফেলতে পারে। ফলে
+Pessimistic locking যে "একচ্ছত্র সুরক্ষা" দেওয়ার কথা ছিল, তা এখানে কার্যকর হয় না।
+
+2. Data inconsistency: Pessimistic locking ব্যবহার করা হয় মূলত ব্যাংকিং বা inventory মতো critical system-এ। সেখানে যদি অন্য কোনো
+process ভুল বা অস্থায়ী data read করে কোনো সিদ্ধান্ত নেয়, তবে পুরো সিস্টেমের হিসাব ভুল হয়ে যাবে।
