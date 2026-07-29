@@ -36,3 +36,22 @@ system প্রয়োজন অনুযায়ী ব্যবস্থা ন�
 efficient approach নয়।
 
 
+-> Use of Optimistic Lock
+1. Low Contention
+যেসকল system-এ একই সময়ে একই ডেটা নিয়ে একাধিক user কাজ করার বা data পরিবর্তনের সম্ভাবনা অনেক কম থাকে, সেখানে Optimistic Locking Most
+Effective। বিশেষ করে Read-heavy system এবং Non-critical data অপারেশনের ক্ষেত্রে এটি সবথেকে ভালো ফল দেয়। এটি কোনো blocking ছাড়াই
+Concurrent Access নিশ্চিত করে, যার ফলে একাধিক user একসাথে কাজ করতে পারে এবং system-এর overall speed increases।
+
+2. Short Transactions
+যখন একটি transaction অত্যন্ত fast বা স্বল্প সময়ের মধ্যে সম্পন্ন হয়, তখন মাঝপথে অন্য কেউ এসে data update করার বা conflict তৈরি করার ঝুঁকি
+অনেক কমে যায়। Optimistic Locking-এর non-blocking প্রকৃতির কারণে এটি ব্যবহারের ফলে অহেতুক অপেক্ষার প্রয়োজন হয় না। এতে system-এর
+Response time fast হয় এবং মেমোরি বা storage রিসোর্সের সঠিক ব্যবহার নিশ্চিত হয়। এটি মূলত একটি logic check এবং validation মেকানিজম
+ব্যবহার করে কাজ শেষ করে।
+
+3. Scalability
+যদি কোনো project অনেক বেশি user থাকে এবং ডেটাবেস লকিংয়ের(Pessimistic Locking) কারণে Performance কমে যাওয়ার বা ডেডলক হওয়ার আশঙ্কা
+থাকে, তবে সেখানে Optimistic Locking ব্যবহার করা বুদ্ধিমানের কাজ। এটি ডাটাবেস engine-এর ওপর অতিরিক্ত চাপ সৃষ্টি না করে কেবল write করার সময়
+version check করে। এর ফলে সিস্টেমটি অনেক বেশি ইউজারের চাপ নিতে সক্ষম হয়।
+
+4. Distributed Systems
+আধুনিক মাইক্রোসার্ভিস বা ডিস্ট্রিবিউটেড আর্কিটেকচারে যেখানে অনেক সময় নেটওয়ার্ক ল্যাটেন্সি থাকে, সেখানে দীর্ঘক্ষণ কানেকশন ধরে রাখা বা লক করে রাখা ঝুঁকিপূর্ণ। এই পরিস্থিতিতে Optimistic Locking একটি নির্দিষ্ট sequence মেনে কাজ করে এবং ডেটার নিখুঁত অখণ্ডতা বজায় রাখে।
